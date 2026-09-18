@@ -1,0 +1,44 @@
+{
+    "name": "الميزان - نظام محاسبة ونقاط بيع",
+    "short_name": "الميزان",
+    "description": "نظام محاسبة متكامل - مخزون، مبيعات، مشتريات، تقارير، واتساب",
+    "start_url": "./index.html",
+    "display": "standalone",
+    "orientation": "portrait",
+    "background_color": "#0D0D0D",
+    "theme_color": "#C9A94E",
+    "lang": "ar",
+    "dir": "rtl",
+    "scope": "./",
+    "categories": ["business", "productivity", "finance"],
+    "icons": [
+        {
+            "src": "icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ],
+    "shortcuts": [
+        {
+            "name": "الكاشير",
+            "short_name": "كاشير",
+            "description": "فتح صفحة البيع",
+            "url": "./index.html#cashier",
+            "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
+        },
+        {
+            "name": "التقارير",
+            "short_name": "تقارير",
+            "description": "عرض التقارير",
+            "url": "./index.html#reports",
+            "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
+        }
+    ]
+}
