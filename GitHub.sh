@@ -1,3 +1,3 @@
-git add manifest.json service-worker.js icon-192.png icon-512.png index.html
-git commit -m "إضافة PWA - تطبيق موبايل"
+git add app.js
+git commit -m "ملف app.js كامل - إصلاح خطأ STORAGE_KEY"
 git push
