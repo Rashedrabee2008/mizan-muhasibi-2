@@ -3,124 +3,92 @@
 // يعمل بدون إنترنت + caching
 // ============================================================
 
-const CACHE_NAME = 'mizan-v14-' + new Date().getTime();
-const OFFLINE_URL = 'index.html';
-
-// الملفات التي سيتم تخزينها مؤقتاً (تعمل بدون إنترنت)
+const CACHE_NAME = 'mizan-v15-' + Date.now();
 const CACHE_FILES = [
     './',
     './index.html',
     './app.js',
+    './app-extras.js',
     './style.css',
     './manifest.json'
 ];
 
-// ═══════════════════════════════════════════════════════════
-// التثبيت - تخزين الملفات مؤقتاً
-// ═══════════════════════════════════════════════════════════
-self.addEventListener('install', (event) => {
-    console.log('🔧 Service Worker: جاري التثبيت...');
+self.addEventListener('install', function(event) {
+    console.log('🔧 Service Worker: تثبيت...');
     event.waitUntil(
         caches.open(CACHE_NAME)
-            .then((cache) => {
-                console.log('📦 تخزين الملفات مؤقتاً...');
-                return cache.addAll(CACHE_FILES.map(url => new Request(url, { cache: 'reload' })));
+            .then(function(cache) {
+                return cache.addAll(CACHE_FILES.map(function(url) {
+                    return new Request(url, { cache: 'reload' });
+                }));
             })
-            .then(() => {
-                console.log('✅ Service Worker: تم التثبيت');
+            .then(function() {
                 return self.skipWaiting();
             })
-            .catch((err) => {
-                console.error('❌ Service Worker: فشل التثبيت', err);
+            .catch(function(err) {
+                console.log('⚠️ فشل تثبيت SW:', err);
             })
     );
 });
 
-// ═══════════════════════════════════════════════════════════
-// التنشيط - حذف النسخ القديمة
-// ═══════════════════════════════════════════════════════════
-self.addEventListener('activate', (event) => {
-    console.log('⚡ Service Worker: جاري التنشيط...');
+self.addEventListener('activate', function(event) {
+    console.log('⚡ Service Worker: تنشيط...');
     event.waitUntil(
-        caches.keys()
-            .then((cacheNames) => {
-                return Promise.all(
-                    cacheNames.map((cacheName) => {
-                        if (cacheName !== CACHE_NAME) {
-                            console.log('🗑️ حذف النسخة القديمة:', cacheName);
-                            return caches.delete(cacheName);
-                        }
-                    })
-                );
-            })
-            .then(() => {
-                console.log('✅ Service Worker: تم التنشيط');
-                return self.clients.claim();
-            })
+        caches.keys().then(function(names) {
+            return Promise.all(
+                names.map(function(name) {
+                    if (name !== CACHE_NAME) {
+                        return caches.delete(name);
+                    }
+                })
+            );
+        }).then(function() {
+            return self.clients.claim();
+        })
     );
 });
 
-// ═══════════════════════════════════════════════════════════
-// الجلب - إرجاع الملفات من الكاش أو الإنترنت
-// ═══════════════════════════════════════════════════════════
-self.addEventListener('fetch', (event) => {
-    // تجاهل طلبات Firebase و APIs
+self.addEventListener('fetch', function(event) {
     const url = new URL(event.request.url);
     
-    if (url.hostname.includes('firebase') ||
-        url.hostname.includes('googleapis') ||
+    // تجاهل Firebase
+    if (url.hostname.includes('firebase') || 
+        url.hostname.includes('googleapis') || 
         url.hostname.includes('gstatic') ||
         url.hostname.includes('cdnjs') ||
         event.request.method !== 'GET') {
-        return; // اترك الطلب يمر عادي
+        return;
     }
 
     event.respondWith(
-        caches.match(event.request)
-            .then((cachedResponse) => {
-                if (cachedResponse) {
-                    // ملف موجود في الكاش — استخدمه فوراً، ثم حدّثه بالخلفية
-                    fetch(event.request)
-                        .then((networkResponse) => {
-                            if (networkResponse && networkResponse.status === 200) {
-                                caches.open(CACHE_NAME).then((cache) => {
-                                    cache.put(event.request, networkResponse.clone());
-                                });
-                            }
-                        })
-                        .catch(() => {});
-                    return cachedResponse;
-                }
-
-                // غير موجود في الكاش — اجلبه من الإنترنت
-                return fetch(event.request)
-                    .then((response) => {
-                        if (!response || response.status !== 200 || response.type !== 'basic') {
-                            return response;
-                        }
-                        const responseToCache = response.clone();
-                        caches.open(CACHE_NAME).then((cache) => {
-                            cache.put(event.request, responseToCache);
+        caches.match(event.request).then(function(cached) {
+            if (cached) {
+                fetch(event.request).then(function(response) {
+                    if (response && response.status === 200) {
+                        caches.open(CACHE_NAME).then(function(cache) {
+                            cache.put(event.request, response.clone());
                         });
-                        return response;
-                    })
-                    .catch(() => {
-                        // عند فشل الإنترنت — أعد صفحة index.html
-                        if (event.request.mode === 'navigate') {
-                            return caches.match(OFFLINE_URL);
-                        }
-                    });
-            })
+                    }
+                }).catch(function() {});
+                return cached;
+            }
+            
+            return fetch(event.request).then(function(response) {
+                if (!response || response.status !== 200 || response.type !== 'basic') {
+                    return response;
+                }
+                const toCache = response.clone();
+                caches.open(CACHE_NAME).then(function(cache) {
+                    cache.put(event.request, toCache);
+                });
+                return response;
+            }).catch(function() {
+                if (event.request.mode === 'navigate') {
+                    return caches.match('./index.html');
+                }
+            });
+        })
     );
-});
-
-// ═══════════════════════════════════════════════════════════
-// الإشعارات (اختياري)
-// ═══════════════════════════════════════════════════════════
-self.addEventListener('message', (event) => {
-    if (event.data && event.data.type === 'SKIP_WAITING') {
-        self.skipWaiting();
-    }
 });
 
 console.log('✅ Service Worker: تم التحميل');
