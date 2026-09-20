@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إصلاح الميزان</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Tajawal', Arial, sans-serif; }
+        body {
+            background: #0D0D0D;
+            color: #F5E6C8;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .box {
+            max-width: 500px;
+            margin: 0 auto;
+            background: #1C1C1C;
+            border-radius: 16px;
+            padding: 20px;
+            border: 2px solid #C9A94E;
+        }
+        h1 {
+            color: #C9A94E;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+        .info-box {
+            background: #0D0D0D;
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 12px;
+            border-right: 4px solid #4A8AB5;
+            font-size: 13px;
+            line-height: 1.8;
+        }
+        .info-box strong { color: #C9A94E; }
+        .success { border-right-color: #2D8F5E; }
+        .warning { border-right-color: #E6A830; }
+        .error { border-right-color: #E06060; }
+        button {
+            width: 100%;
+            padding: 14px;
+            border-radius: 10px;
+            border: none;
+            font-size: 14px;
+            font-weight: 800;
+            cursor: pointer;
+            margin-bottom: 8px;
+            font-family: inherit;
+        }
+        .btn-primary { background: linear-gradient(135deg, #C9A94E, #B8953A); color: #0D0D0D; }
+        .btn-success { background: linear-gradient(135deg, #2D8F5E, #1A7A4A); color: #fff; }
+        .btn-danger { background: linear-gradient(135deg, #E06060, #C04040); color: #fff; }
+        .btn-info { background: linear-gradient(135deg, #4A8AB5, #3A7AA5); color: #fff; }
+        .user-item {
+            background: #0D0D0D;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 6px;
+            border-right: 3px solid #C9A94E;
+        }
+        .user-item .name { color: #C9A94E; font-weight: 900; }
+        .user-item .pass { color: #4A8AB5; font-size: 12px; }
+        .user-item .status { font-size: 11px; }
+        .log {
+            background: #000;
+            color: #0F0;
+            padding: 10px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-bottom: 12px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="box">
+    <h1>🔧 إصلاح الميزان</h1>
+
+    <div class="info-box" id="statusBox">
+        <strong>الحالة:</strong> جاري الفحص...
+    </div>
+
+    <div class="log" id="log">
+        <div>📋 سجل التشخيص:</div>
+    </div>
+
+    <div class="info-box">
+        <strong>👥 المستخدمون الحاليون:</strong>
+        <div id="usersList" style="margin-top:8px;">جاري التحميل...</div>
+    </div>
+
+    <button class="btn-success" onclick="fixUsers()">✅ إصلاح المستخدمين (123456)</button>
+    <button class="btn-primary" onclick="checkData()">📊 فحص البيانات</button>
+    <button class="btn-info" onclick="openMizan()">🚀 افتح التطبيق</button>
+    <button class="btn-danger" onclick="forceReset()">🗑️ إعادة تعيين كل البيانات</button>
+</div>
+
+<script>
+// سجل التشخيص
+const logEl = document.getElementById('log');
+function log(msg, color) {
+    const div = document.createElement('div');
+    div.style.color = color || '#0F0';
+    div.textContent = new Date().toLocaleTimeString('ar-EG') + ' → ' + msg;
+    logEl.appendChild(div);
+    logEl.scrollTop = logEl.scrollHeight;
+    console.log(msg);
+}
+
+// تحديث الحالة
+function setStatus(msg, type) {
+    const box = document.getElementById('statusBox');
+    box.className = 'info-box ' + (type || '');
+    box.innerHTML = '<strong>الحالة:</strong> ' + msg;
+}
+
+// فحص البيانات
+function checkData() {
+    log('📊 بدء فحص البيانات...');
+    
+    try {
+        const users = JSON.parse(localStorage.getItem('mizan_users') || '[]');
+        const products = JSON.parse(localStorage.getItem('mizan_products') || '[]');
+        const sales = JSON.parse(localStorage.getItem('mizan_sales') || '[]');
+        const customers = JSON.parse(localStorage.getItem('mizan_customers') || '[]');
+        
+        log('👥 المستخدمون: ' + users.length, users.length > 0 ? '#0F0' : '#F00');
+        log('📦 المنتجات: ' + products.length, '#0F0');
+        log('🧾 الفواتير: ' + sales.length, '#0F0');
+        log('👤 العملاء: ' + customers.length, '#0F0');
+        
+        // عرض المستخدمين
+        const usersList = document.getElementById('usersList');
+        if (users.length === 0) {
+            usersList.innerHTML = '<span style="color:#E06060;">❌ لا يوجد مستخدمون!</span>';
+            setStatus('❌ لا يوجد مستخدمون — اضغط "إصلاح المستخدمين"', 'error');
+        } else {
+            let html = '';
+            users.forEach(function(u) {
+                html += '<div class="user-item">' +
+                    '<div class="name">👤 ' + u.name + '</div>' +
+                    '<div class="pass">🔑 كلمة المرور: <strong>' + (u.password || 'فارغة') + '</strong></div>' +
+                    '<div class="status" style="color:' + (u.active !== false ? '#2D8F5E' : '#E06060') + ';">' + 
+                        (u.active !== false ? '✅ نشط' : '⏸️ موقوف') + 
+                    '</div>' +
+                '</div>';
+            });
+            usersList.innerHTML = html;
+            setStatus('✅ البيانات موجودة (' + users.length + ' مستخدم)', 'success');
+        }
+        
+        // فحص localStorage
+        let totalSize = 0;
+        let keysCount = 0;
+        Object.keys(localStorage).forEach(function(key) {
+            if (key.startsWith('mizan_')) {
+                totalSize += (localStorage[key] || '').length;
+                keysCount++;
+            }
+        });
+        log('💾 عدد المفاتيح: ' + keysCount + ' — الحجم: ' + (totalSize / 1024).toFixed(2) + ' KB', '#0FF');
+        
+    } catch (e) {
+        log('❌ خطأ في الفحص: ' + e.message, '#F00');
+        setStatus('❌ خطأ في القراءة: ' + e.message, 'error');
+    }
+}
+
+// إصلاح المستخدمين
+function fixUsers() {
+    log('🔧 بدء إصلاح المستخدمين...', '#FF0');
+    
+    const defaultUsers = [
+        { id: 1, name: 'المدير',  password: '123456', role: 'admin',   active: true },
+        { id: 2, name: 'محمد',   password: '123456', role: 'manager', active: true },
+        { id: 3, name: 'أحمد',   password: '123456', role: 'cashier', active: true },
+        { id: 4, name: 'علي',    password: '123456', role: 'seller',  active: true },
+        { id: 5, name: 'زائر',   password: '123456', role: 'viewer',  active: true }
+    ];
+    
+    try {
+        localStorage.setItem('mizan_users', JSON.stringify(defaultUsers));
+        log('✅ تم حفظ ' + defaultUsers.length + ' مستخدم', '#0F0');
+        log('👑 المدير / 123456', '#0F0');
+        
+        setStatus('✅ تم إصلاح المستخدمين! جرب الدخول الآن', 'success');
+        
+        // إعادة الفحص
+        setTimeout(checkData, 500);
+        
+        // تحذير
+        alert('✅ تم إصلاح المستخدمين!\n\nالآن اضغط "افتح التطبيق" وجرب:\n\nالمستخدم: المدير\nكلمة المرور: 123456');
+        
+    } catch (e) {
+        log('❌ خطأ: ' + e.message, '#F00');
+        setStatus('❌ فشل الإصلاح: ' + e.message, 'error');
+    }
+}
+
+// إعادة تعيين كل البيانات
+function forceReset() {
+    if (!confirm('⚠️ سيتم مسح جميع البيانات (منتجات، فواتير، عملاء، مستخدمين)!\n\nمتابعة؟')) return;
+    if (!confirm('⚠️ تأكيد نهائي؟ لا يمكن التراجع!')) return;
+    
+    log('🗑️ بدء إعادة التعيين...', '#F00');
+    
+    let removed = 0;
+    Object.keys(localStorage).forEach(function(key) {
+        if (key.startsWith('mizan_')) {
+            localStorage.removeItem(key);
+            removed++;
+        }
+    });
+    
+    log('🗑️ تم حذف ' + removed + ' مفتاح', '#F00');
+    setStatus('✅ تم إعادة التعيين! افتح التطبيق لإنشاء بيانات جديدة', 'success');
+    
+    alert('✅ تم مسح كل البيانات!\n\nالآن اضغط "افتح التطبيق"\nسيتم إنشاء البيانات الافتراضية');
+}
+
+// فتح التطبيق
+function openMizan() {
+    log('🚀 جاري فتح التطبيق...', '#0FF');
+    window.location.href = 'index.html';
+}
+
+// تشغيل الفحص الأولي عند التحميل
+window.addEventListener('DOMContentLoaded', function() {
+    log('🚀 بدء التشخيص...', '#0FF');
+    setTimeout(checkData, 500);
+});
+</script>
+
+</body>
+</html>
