@@ -1,9 +1,8 @@
 // ============================================================
-// الميزان 14.0.0 - app.js
-// الملف الكامل مع تحديثات الخصم (نقدي / مئوي)
+// الميزان 14.0.0 - app.js (النسخة المُصلحة الكاملة)
 // ============================================================
 
-console.log('🚀 تحميل app.js - الملف الكامل');
+console.log('🚀 تحميل app.js - النسخة المُصلحة');
 
 // ═══════════════════════════════════════════════════════════
 // ☁️ Firebase Configuration
@@ -234,19 +233,33 @@ window.syncFromCloud = function(silent) {
             }
 
             const data = snapshot.val();
-            if (data.products) window.products = data.products;
-            if (data.sales) window.sales = data.sales;
-            if (data.purchases) window.purchases = data.purchases;
-            if (data.customers) window.customers = data.customers;
-            if (data.suppliers) window.suppliers = data.suppliers;
-            if (data.cashBoxes) window.cashBoxes = data.cashBoxes;
-            if (data.expenses) window.expenses = data.expenses;
-            if (data.treasury) window.treasury = data.treasury;
-            if (data.payments) window.payments = data.payments;
-            if (data.returns) window.returns = data.returns;
-            if (data.users) window.users = data.users;
-            if (data.companyData) window.companyData = data.companyData;
-            if (data.vatSettings) window.vatSettings = data.vatSettings;
+
+            // ✅ التحقق من صحة البيانات قبل الاستبدال
+            if (data.products && Array.isArray(data.products)) {
+                window.products = data.products.map(function(p) {
+                    return {
+                        id: p.id || Date.now() + Math.random(),
+                        name: p.name || 'منتج غير معروف',
+                        buy: Number(p.buy) || 0,
+                        sell: Number(p.sell) || 0,
+                        qty: Number(p.qty) || 0,
+                        min: Number(p.min) || 5,
+                        barcode: p.barcode || ''
+                    };
+                });
+            }
+            if (data.sales && Array.isArray(data.sales)) window.sales = data.sales;
+            if (data.purchases && Array.isArray(data.purchases)) window.purchases = data.purchases;
+            if (data.customers && Array.isArray(data.customers)) window.customers = data.customers;
+            if (data.suppliers && Array.isArray(data.suppliers)) window.suppliers = data.suppliers;
+            if (data.cashBoxes && Array.isArray(data.cashBoxes)) window.cashBoxes = data.cashBoxes;
+            if (data.expenses && Array.isArray(data.expenses)) window.expenses = data.expenses;
+            if (data.treasury && Array.isArray(data.treasury)) window.treasury = data.treasury;
+            if (data.payments && Array.isArray(data.payments)) window.payments = data.payments;
+            if (data.returns && Array.isArray(data.returns)) window.returns = data.returns;
+            if (data.users && Array.isArray(data.users)) window.users = data.users;
+            if (data.companyData && typeof data.companyData === 'object') window.companyData = data.companyData;
+            if (data.vatSettings && typeof data.vatSettings === 'object') window.vatSettings = data.vatSettings;
 
             saveAll();
             renderProducts();
@@ -426,6 +439,7 @@ window.navigateTo = function(page) {
 // 💾 المنتجات
 // ═══════════════════════════════════════════════════════════
 window.saveProduct = function() {
+    if (!canAdd()) { showToast('⚠️ لا تملك صلاحية', 'error'); return; }
     const id = $('productId') ? $('productId').value : '';
     const name = $('productName') ? $('productName').value.trim() : '';
     const barcode = $('productBarcode') ? $('productBarcode').value.trim() : '';
@@ -478,6 +492,7 @@ window.editProduct = function(id) {
 };
 
 window.deleteProduct = function(id) {
+    if (!canDelete()) { showToast('⚠️ لا تملك صلاحية', 'error'); return; }
     const p = products.find(function(pr) { return pr.id == id; });
     if (!p) return;
     if (!confirm('⚠️ حذف "' + p.name + '"؟')) return;
@@ -513,18 +528,20 @@ window.renderProducts = function() {
             '<span style="color:#2D8F5E;">' + formatMoney(p.sell) + '</span>' +
             '<span style="color:' + qtyColor + ';font-weight:900;">' + p.qty + '</span>' +
             '<div style="display:flex;gap:4px;">' +
-                '<button class="btn btn-warning btn-sm" onclick="editProduct(' + p.id + ')"><i class="fas fa-edit"></i></button>' +
-                '<button class="btn btn-danger btn-sm" onclick="deleteProduct(' + p.id + ')"><i class="fas fa-trash"></i></button>' +
+                '<button class="btn btn-warning btn-sm" data-permission="edit" onclick="editProduct(' + p.id + ')"><i class="fas fa-edit"></i></button>' +
+                '<button class="btn btn-danger btn-sm" data-permission="delete" onclick="deleteProduct(' + p.id + ')"><i class="fas fa-trash"></i></button>' +
             '</div>' +
         '</div>';
     });
     c.innerHTML = html;
+    if (typeof applyPermissions === 'function') applyPermissions();
 };
 
 // ═══════════════════════════════════════════════════════════
 // 👥 العملاء
 // ═══════════════════════════════════════════════════════════
 window.saveCustomer = function() {
+    if (!canAdd()) { showToast('⚠️ لا تملك صلاحية', 'error'); return; }
     const id = $('customerId') ? $('customerId').value : '';
     const name = $('customerName') ? $('customerName').value.trim() : '';
     const phone = $('customerPhone') ? $('customerPhone').value.trim() : '';
@@ -573,6 +590,7 @@ window.editCustomer = function(id) {
 };
 
 window.deleteCustomer = function(id) {
+    if (!canDelete()) { showToast('⚠️ لا تملك صلاحية', 'error'); return; }
     const c = customers.find(function(cu) { return cu.id == id; });
     if (!c) return;
     if (!confirm('⚠️ حذف "' + c.name + '"؟')) return;
@@ -611,18 +629,20 @@ window.renderCustomers = function() {
             '<span style="font-size:11px;color:#A89070;">' + (cu.phone || '-') + '</span>' +
             '<span style="color:' + (balance > 0 ? '#E06060' : '#2D8F5E') + ';font-weight:900;">' + formatMoney(balance) + '</span>' +
             '<div style="display:flex;gap:4px;justify-content:flex-end;">' +
-                '<button class="btn btn-warning btn-sm" onclick="editCustomer(' + cu.id + ')"><i class="fas fa-edit"></i></button>' +
-                '<button class="btn btn-danger btn-sm" onclick="deleteCustomer(' + cu.id + ')"><i class="fas fa-trash"></i></button>' +
+                '<button class="btn btn-warning btn-sm" data-permission="edit" onclick="editCustomer(' + cu.id + ')"><i class="fas fa-edit"></i></button>' +
+                '<button class="btn btn-danger btn-sm" data-permission="delete" onclick="deleteCustomer(' + cu.id + ')"><i class="fas fa-trash"></i></button>' +
             '</div>' +
         '</div>';
     });
     c.innerHTML = html;
+    if (typeof applyPermissions === 'function') applyPermissions();
 };
 
 // ═══════════════════════════════════════════════════════════
 // 🚚 الموردين
 // ═══════════════════════════════════════════════════════════
 window.saveSupplier = function() {
+    if (!canAdd()) { showToast('⚠️ لا تملك صلاحية', 'error'); return; }
     const id = $('supplierId') ? $('supplierId').value : '';
     const name = $('supplierName') ? $('supplierName').value.trim() : '';
     const phone = $('supplierPhone') ? $('supplierPhone').value.trim() : '';
@@ -671,6 +691,7 @@ window.editSupplier = function(id) {
 };
 
 window.deleteSupplier = function(id) {
+    if (!canDelete()) { showToast('⚠️ لا تملك صلاحية', 'error'); return; }
     const s = suppliers.find(function(su) { return su.id == id; });
     if (!s) return;
     if (!confirm('⚠️ حذف "' + s.name + '"؟')) return;
@@ -709,12 +730,13 @@ window.renderSuppliers = function() {
             '<span style="font-size:11px;color:#A89070;">' + (s.phone || '-') + '</span>' +
             '<span style="color:' + (balance > 0 ? '#E6A830' : '#2D8F5E') + ';font-weight:900;">' + formatMoney(balance) + '</span>' +
             '<div style="display:flex;gap:4px;justify-content:flex-end;">' +
-                '<button class="btn btn-warning btn-sm" onclick="editSupplier(' + s.id + ')"><i class="fas fa-edit"></i></button>' +
-                '<button class="btn btn-danger btn-sm" onclick="deleteSupplier(' + s.id + ')"><i class="fas fa-trash"></i></button>' +
+                '<button class="btn btn-warning btn-sm" data-permission="edit" onclick="editSupplier(' + s.id + ')"><i class="fas fa-edit"></i></button>' +
+                '<button class="btn btn-danger btn-sm" data-permission="delete" onclick="deleteSupplier(' + s.id + ')"><i class="fas fa-trash"></i></button>' +
             '</div>' +
         '</div>';
     });
     c.innerHTML = html;
+    if (typeof applyPermissions === 'function') applyPermissions();
 };
 
 // ═══════════════════════════════════════════════════════════
@@ -746,6 +768,7 @@ window.getBoxTypeName = function(type) {
 };
 
 window.saveCashBox = function() {
+    if (!canAdd()) { showToast('⚠️ لا تملك صلاحية', 'error'); return; }
     const id = $('cashBoxId') ? $('cashBoxId').value : '';
     const name = $('cashBoxName') ? $('cashBoxName').value.trim() : '';
     const type = $('cashBoxType') ? $('cashBoxType').value : 'cash';
@@ -800,6 +823,7 @@ window.editCashBox = function(id) {
 };
 
 window.deleteCashBox = function(id) {
+    if (!canDelete()) { showToast('⚠️ لا تملك صلاحية', 'error'); return; }
     const box = getCashBoxById(id);
     if (!box) return;
     if (box.isDefault) { showToast('⚠️ لا يمكن حذف الافتراضية', 'error'); return; }
@@ -857,12 +881,13 @@ window.renderCashBoxes = function() {
             '</div>' +
             '<div class="cash-box-actions">' +
                 (!box.isDefault ? '<button class="btn-icon-sm" onclick="setDefaultCashBox(' + box.id + ')">⭐</button>' : '') +
-                '<button class="btn-icon-sm" onclick="editCashBox(' + box.id + ')">✏️</button>' +
-                '<button class="btn-icon-sm danger" onclick="deleteCashBox(' + box.id + ')">🗑️</button>' +
+                '<button class="btn-icon-sm" data-permission="edit" onclick="editCashBox(' + box.id + ')">✏️</button>' +
+                '<button class="btn-icon-sm danger" data-permission="delete" onclick="deleteCashBox(' + box.id + ')">🗑️</button>' +
             '</div>' +
         '</div>';
     });
     c.innerHTML = html;
+    if (typeof applyPermissions === 'function') applyPermissions();
 };
 
 window.populateCashBoxDropdowns = function() {
@@ -878,8 +903,15 @@ window.populateCashBoxDropdowns = function() {
             html += '<option value="' + box.id + '">' + (box.icon || '') + ' ' + box.name + (box.isDefault ? ' ⭐' : '') + '</option>';
         });
         sel.innerHTML = html;
-        if (cv) sel.value = cv;
-        else if (defaultBox) sel.value = defaultBox.id;
+        
+        // ✅ التحقق من صحة القيمة
+        if (cv) {
+            const optionExists = Array.from(sel.options).some(function(opt) { return opt.value == cv; });
+            if (optionExists) sel.value = cv;
+        } else if (defaultBox) {
+            const defaultExists = Array.from(sel.options).some(function(opt) { return opt.value == defaultBox.id; });
+            if (defaultExists) sel.value = defaultBox.id;
+        }
     });
 };
 
@@ -986,7 +1018,6 @@ window.renderCashier = function() {
     if (tb) tb.style.display = 'block';
 };
 
-// ✅ تحديث المجموع (مع دعم الخصم نقدي/مئوي)
 window.updateSaleTotals = function() {
     const subtotal = currentSaleItems.reduce(function(s, i) { return s + i.total; }, 0);
     const totalQty = currentSaleItems.reduce(function(s, i) { return s + i.qty; }, 0);
@@ -994,7 +1025,6 @@ window.updateSaleTotals = function() {
     const isTax = invoiceType === 'tax';
     const vat = isTax ? (subtotal * (vatSettings.defaultVAT / 100)) : 0;
 
-    // ✅ الخصم النقدي (مبلغ ثابت أو نسبة)
     const discountValue = parseFloat($('saleDiscount') ? $('saleDiscount').value : 0) || 0;
     const discountType = $('saleDiscountType') ? $('saleDiscountType').value : 'fixed';
     let discount = 0;
@@ -1004,7 +1034,6 @@ window.updateSaleTotals = function() {
         discount = discountValue;
     }
 
-    // ✅ خصم المستوى (مبلغ ثابت أو نسبة)
     const levelDiscountValue = parseFloat($('saleLevelDiscount') ? $('saleLevelDiscount').value : 0) || 0;
     const levelDiscountType = $('saleLevelDiscountType') ? $('saleLevelDiscountType').value : 'fixed';
     let levelDiscount = 0;
@@ -1036,6 +1065,7 @@ window.updateInvoiceHeader = function() {
 };
 
 window.saveSale = function() {
+    if (!canAdd()) { showToast('⚠️ لا تملك صلاحية', 'error'); return; }
     if (currentSaleItems.length === 0) { showToast('⚠️ لا توجد أصناف', 'error'); return; }
 
     for (let i = 0; i < currentSaleItems.length; i++) {
@@ -1058,7 +1088,6 @@ window.saveSale = function() {
     const subtotal = currentSaleItems.reduce(function(s, i) { return s + i.total; }, 0);
     const vat = isTax ? (subtotal * (vatSettings.defaultVAT / 100)) : 0;
 
-    // ✅ حساب الخصم النقدي
     const discountValue = parseFloat($('saleDiscount') ? $('saleDiscount').value : 0) || 0;
     const discountType = $('saleDiscountType') ? $('saleDiscountType').value : 'fixed';
     let discount = 0;
@@ -1068,7 +1097,6 @@ window.saveSale = function() {
         discount = discountValue;
     }
 
-    // ✅ حساب خصم المستوى
     const levelDiscountValue = parseFloat($('saleLevelDiscount') ? $('saleLevelDiscount').value : 0) || 0;
     const levelDiscountType = $('saleLevelDiscountType') ? $('saleLevelDiscountType').value : 'fixed';
     let levelDiscount = 0;
@@ -1142,6 +1170,7 @@ window.saveSale = function() {
     renderCashBoxes();
 
     showToast('✅ فاتورة #' + inv.number + ' - ' + formatMoney(total) + (isCash ? ' 💵' : ' 📝 آجل'), 'success');
+    scheduleAutoSync();
 };
 
 window.clearSale = function() {
@@ -1266,6 +1295,7 @@ window.updatePurTotals = function() {
 };
 
 window.savePurchase = function() {
+    if (!canAdd()) { showToast('⚠️ لا تملك صلاحية', 'error'); return; }
     if (currentPurItems.length === 0) { showToast('⚠️ لا توجد أصناف', 'error'); return; }
     const supplierName = $('purSupplier') ? $('purSupplier').value : '';
     if (!supplierName) { showToast('⚠️ اختر مورد', 'error'); return; }
@@ -1325,6 +1355,7 @@ window.savePurchase = function() {
     updateDashboard();
 
     showToast('✅ فاتورة شراء #' + inv.number + ' - ' + formatMoney(subtotal), 'success');
+    scheduleAutoSync();
 };
 
 window.clearPurchase = function() {
@@ -1346,6 +1377,7 @@ window.updatePurStats = function() {
     if ($('purTodayAmount')) $('purTodayAmount').textContent = formatMoney(today);
 };
 
+// ✅ الدالة المُصلحة - السطر المقطوع
 window.renderPurchases = function() {
     const c = $('purchasesList');
     if (!c) return;
@@ -1357,22 +1389,24 @@ window.renderPurchases = function() {
     let html = '<div class="table-header" style="grid-template-columns: 0.5fr 1.3fr 1fr 0.8fr 0.8fr 1.2fr;"><span>#</span><span>المورد</span><span>المبلغ</span><span>الدفع</span><span>التاريخ</span><span></span></div>';
     sorted.forEach(function(inv) {
         const statusLabel = inv.status === 'paid' ? '✅ نقدي' : '📝 آجل';
-        html += '<div class="table-row" style="grid-template-columns: 0
-                    '<span>#' + inv.number + '</span>' +
+        html += '<div class="table-row" style="grid-template-columns: 0.5fr 1.3fr 1fr 0.8fr 0.8fr 1.2fr;">' +
+            '<span>#' + inv.number + '</span>' +
             '<span><strong>' + inv.supplierName + '</strong></span>' +
             '<span style="color:#E06060;font-weight:700;">' + formatMoney(inv.total) + '</span>' +
             '<span style="font-size:10px;">' + statusLabel + '</span>' +
             '<span style="font-size:10px;color:#A89070;">' + inv.date + '</span>' +
             '<div style="display:flex;gap:4px;justify-content:flex-end;">' +
                 '<button class="btn btn-info btn-sm" onclick="printPurchaseFromList(' + inv.id + ')"><i class="fas fa-print"></i></button>' +
-                '<button class="btn btn-danger btn-sm" onclick="deletePurchase(' + inv.id + ')"><i class="fas fa-trash"></i></button>' +
+                '<button class="btn btn-danger btn-sm" data-permission="delete" onclick="deletePurchase(' + inv.id + ')"><i class="fas fa-trash"></i></button>' +
             '</div>' +
         '</div>';
     });
     c.innerHTML = html;
+    if (typeof applyPermissions === 'function') applyPermissions();
 };
 
 window.deletePurchase = function(id) {
+    if (!canDelete()) { showToast('⚠️ لا تملك صلاحية', 'error'); return; }
     const inv = purchases.find(function(p) { return p.id == id; });
     if (!inv) return;
     if (!confirm('⚠️ حذف فاتورة #' + inv.number + '؟')) return;
@@ -1397,6 +1431,7 @@ window.deletePurchase = function(id) {
 // 💸 المصروفات
 // ═══════════════════════════════════════════════════════════
 window.saveExpense = function() {
+    if (!canAdd()) { showToast('⚠️ لا تملك صلاحية', 'error'); return; }
     const note = $('expNote') ? $('expNote').value.trim() : '';
     const amount = parseFloat($('expAmount') ? $('expAmount').value : 0) || 0;
     const category = $('expCategory') ? $('expCategory').value : 'عام';
@@ -1432,14 +1467,15 @@ window.saveExpense = function() {
 
     setData('expenses', expenses);
     setData('treasury', treasury);
-    $('expNote').value = '';
-    $('expAmount').value = '';
+    if ($('expNote')) $('expNote').value = '';
+    if ($('expAmount')) $('expAmount').value = '';
 
     renderExpenses();
     updateExpensesStats();
     updateDashboard();
     renderCashBoxes();
     showToast('✅ تم إضافة ' + formatMoney(amount) + ' ج.م', 'success');
+    scheduleAutoSync();
 };
 
 window.updateExpensesStats = function() {
@@ -1469,13 +1505,15 @@ window.renderExpenses = function() {
             '<span style="color:#E06060;font-weight:700;">' + formatMoney(e.amount) + '</span>' +
             '<span style="font-size:11px;color:#A89070;">' + (e.category || 'عام') + '</span>' +
             '<span style="font-size:10px;color:#A89070;">' + e.date + '</span>' +
-            '<button class="btn btn-danger btn-sm" onclick="deleteExpense(' + e.id + ')"><i class="fas fa-trash"></i></button>' +
+            '<button class="btn btn-danger btn-sm" data-permission="delete" onclick="deleteExpense(' + e.id + ')"><i class="fas fa-trash"></i></button>' +
         '</div>';
     });
     c.innerHTML = html;
+    if (typeof applyPermissions === 'function') applyPermissions();
 };
 
 window.deleteExpense = function(id) {
+    if (!canDelete()) { showToast('⚠️ لا تملك صلاحية', 'error'); return; }
     const e = expenses.find(function(x) { return x.id == id; });
     if (!e) return;
     if (!confirm('⚠️ حذف مصروف "' + e.note + '"؟')) return;
@@ -1494,6 +1532,7 @@ window.deleteExpense = function(id) {
 // 📊 حركات الخزنة
 // ═══════════════════════════════════════════════════════════
 window.addTreasuryTransaction = function() {
+    if (!canAdd()) { showToast('⚠️ لا تملك صلاحية', 'error'); return; }
     const type = $('treasuryType') ? $('treasuryType').value : 'deposit';
     const amount = parseFloat($('treasuryAmount') ? $('treasuryAmount').value : 0) || 0;
     const note = ($('treasuryNote') ? $('treasuryNote').value.trim() : '') || (type === 'deposit' ? 'إيداع' : 'سحب');
@@ -1516,8 +1555,8 @@ window.addTreasuryTransaction = function() {
     });
 
     setData('treasury', treasury);
-    $('treasuryAmount').value = '';
-    $('treasuryNote').value = '';
+    if ($('treasuryAmount')) $('treasuryAmount').value = '';
+    if ($('treasuryNote')) $('treasuryNote').value = '';
 
     renderTreasury();
     updateDashboard();
@@ -1627,11 +1666,12 @@ window.renderInvoices = function() {
             '<div style="display:flex;gap:4px;justify-content:flex-end;">' +
                 '<button class="btn btn-info btn-sm" onclick="showInvoiceDetails(' + inv.id + ')"><i class="fas fa-eye"></i></button>' +
                 '<button class="btn btn-success btn-sm" onclick="printInvoice(' + inv.id + ')"><i class="fas fa-print"></i></button>' +
-                '<button class="btn btn-danger btn-sm" onclick="deleteInvoice(' + inv.id + ')"><i class="fas fa-trash"></i></button>' +
+                '<button class="btn btn-danger btn-sm" data-permission="delete" onclick="deleteInvoice(' + inv.id + ')"><i class="fas fa-trash"></i></button>' +
             '</div>' +
         '</div>';
     });
     c.innerHTML = html;
+    if (typeof applyPermissions === 'function') applyPermissions();
 };
 
 window.showInvoiceDetails = function(id) {
@@ -1684,6 +1724,7 @@ window.showInvoiceDetails = function(id) {
 };
 
 window.deleteInvoice = function(id) {
+    if (!canDelete()) { showToast('⚠️ لا تملك صلاحية', 'error'); return; }
     const inv = sales.find(function(s) { return s.id === id; });
     if (!inv) return;
     if (!confirm('⚠️ حذف فاتورة #' + inv.number + '؟')) return;
@@ -1816,6 +1857,7 @@ window.distributePay = function(supplierName, amount) {
 };
 
 window.saveCollect = function() {
+    if (!canAdd()) { showToast('⚠️ لا تملك صلاحية', 'error'); return; }
     const party = $('collectCustomer') ? $('collectCustomer').value : '';
     const amount = parseFloat($('collectAmount') ? $('collectAmount').value : 0) || 0;
     const date = ($('collectDate') ? $('collectDate').value : '') || getTodayDate();
@@ -1851,9 +1893,9 @@ window.saveCollect = function() {
     setData('treasury', treasury);
     setData('sales', sales);
 
-    $('collectAmount').value = '';
-    $('collectNote').value = '';
-    $('collectCustomer').value = '';
+    if ($('collectAmount')) $('collectAmount').value = '';
+    if ($('collectNote')) $('collectNote').value = '';
+    if ($('collectCustomer')) $('collectCustomer').value = '';
     const info = $('collectInfoBox'); if (info) info.style.display = 'none';
 
     updatePaymentsStats();
@@ -1865,9 +1907,11 @@ window.saveCollect = function() {
     updateDashboard();
     renderCashBoxes();
     showToast('✅ تم تحصيل ' + formatMoney(amount) + ' ج.م', 'success');
+    scheduleAutoSync();
 };
 
 window.savePay = function() {
+    if (!canAdd()) { showToast('⚠️ لا تملك صلاحية', 'error'); return; }
     const party = $('paySupplier') ? $('paySupplier').value : '';
     const amount = parseFloat($('payAmount') ? $('payAmount').value : 0) || 0;
     const date = ($('payDate') ? $('payDate').value : '') || getTodayDate();
@@ -1889,7 +1933,7 @@ window.savePay = function() {
         id: Date.now(), type: 'pay', party: party, amount: amount, date: date,
         time: getNowTime(), note: note, cashBoxId: cashBoxId, cashBoxName: box ? box.name : '',
         relatedInvoices: [],
-               createdBy: currentUser ? currentUser.name : ''
+        createdBy: currentUser ? currentUser.name : ''
     };
     pay.relatedInvoices = distributePay(party, amount);
     payments.push(pay);
@@ -1906,9 +1950,9 @@ window.savePay = function() {
     setData('treasury', treasury);
     setData('purchases', purchases);
 
-    $('payAmount').value = '';
-    $('payNote').value = '';
-    $('paySupplier').value = '';
+    if ($('payAmount')) $('payAmount').value = '';
+    if ($('payNote')) $('payNote').value = '';
+    if ($('paySupplier')) $('paySupplier').value = '';
     const info = $('payInfoBox'); if (info) info.style.display = 'none';
 
     updatePaymentsStats();
@@ -1920,6 +1964,7 @@ window.savePay = function() {
     updateDashboard();
     renderCashBoxes();
     showToast('✅ تم سداد ' + formatMoney(amount) + ' ج.م', 'success');
+    scheduleAutoSync();
 };
 
 window.updatePaymentsStats = function() {
@@ -2087,6 +2132,7 @@ window.renderRetItems = function() {
 };
 
 window.saveReturn = function() {
+    if (!canAdd()) { showToast('⚠️ لا تملك صلاحية', 'error'); return; }
     if (currentRetItems.length === 0) { showToast('⚠️ لا توجد أصناف', 'error'); return; }
     const type = $('retType') ? $('retType').value : 'sale';
     const party = $('retParty') ? $('retParty').value : '';
@@ -2158,6 +2204,7 @@ window.saveReturn = function() {
     populateSaleProducts();
 
     showToast('✅ مرتجع #' + ret.number + ' - ' + formatMoney(total) + ' ج.م', 'success');
+    scheduleAutoSync();
 };
 
 window.clearReturn = function() {
@@ -2196,14 +2243,16 @@ window.renderReturns = function() {
             '<span style="font-size:10px;color:#A89070;">' + r.date + '</span>' +
             '<div style="display:flex;gap:4px;justify-content:flex-end;">' +
                 '<button class="btn btn-success btn-sm" onclick="printReturnFromList(' + r.id + ')"><i class="fas fa-print"></i></button>' +
-                '<button class="btn btn-danger btn-sm" onclick="deleteReturn(' + r.id + ')"><i class="fas fa-trash"></i></button>' +
+                '<button class="btn btn-danger btn-sm" data-permission="delete" onclick="deleteReturn(' + r.id + ')"><i class="fas fa-trash"></i></button>' +
             '</div>' +
         '</div>';
     });
     c.innerHTML = html;
+    if (typeof applyPermissions === 'function') applyPermissions();
 };
 
 window.deleteReturn = function(id) {
+    if (!canDelete()) { showToast('⚠️ لا تملك صلاحية', 'error'); return; }
     const ret = returns.find(function(r) { return r.id == id; });
     if (!ret) return;
     if (!confirm('⚠️ حذف مرتجع #' + ret.number + '؟')) return;
@@ -2397,6 +2446,83 @@ window.renderReport = function(type) {
                 '<span>الفترة</span><span>مبيعات</span><span>مشتريات</span><span>مصروفات</span><span>إجمالي ربح</span><span>صافي ربح</span>' +
             '</div>' +
             tableHtml;
+    } else if (type === 'sellers') {
+        const sellerStats = {};
+        sales.forEach(function(s) {
+            const seller = s.seller || 'غير محدد';
+            if (!sellerStats[seller]) sellerStats[seller] = { name: seller, total: 0, count: 0, profit: 0 };
+            sellerStats[seller].total += s.total || 0;
+            sellerStats[seller].count++;
+            sellerStats[seller].profit += s.profit || 0;
+        });
+        const list = Object.values(sellerStats).sort(function(a, b) { return b.total - a.total; });
+        
+        let html = '<div class="report-summary"><div class="report-stat green"><div class="num">' + list.length + '</div><div class="lbl">عدد البائعين</div></div>' +
+            '<div class="report-stat gold"><div class="num">' + formatMoney(list.reduce(function(s, x) { return s + x.total; }, 0)) + '</div><div class="lbl">إجمالي المبيعات</div></div></div>';
+        
+        html += '<div class="report-table-header" style="grid-template-columns: 0.5fr 1.5fr 1fr 0.8fr 1fr;"><span>#</span><span>البائع</span><span>المبيعات</span><span>الفواتير</span><span>الربح</span></div>';
+        list.forEach(function(s, i) {
+            const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i + 1);
+            html += '<div class="report-table-row" style="grid-template-columns: 0.5fr 1.5fr 1fr 0.8fr 1fr;">' +
+                '<span>' + medal + '</span>' +
+                '<span><strong>' + s.name + '</strong></span>' +
+                '<span class="green">' + formatMoney(s.total) + '</span>' +
+                '<span class="blue">' + s.count + '</span>' +
+                '<span class="gold">' + formatMoney(s.profit) + '</span>' +
+            '</div>';
+        });
+        container.innerHTML = html;
+    } else if (type === 'products') {
+        const productStats = {};
+        sales.forEach(function(s) {
+            (s.items || []).forEach(function(it) {
+                if (!productStats[it.productId]) productStats[it.productId] = { name: it.name, qty: 0, total: 0, profit: 0 };
+                productStats[it.productId].qty += it.qty;
+                productStats[it.productId].total += it.total;
+                productStats[it.productId].profit += (it.price - (it.costPrice || 0)) * it.qty;
+            });
+        });
+        const list = Object.values(productStats).sort(function(a, b) { return b.total - a.total; });
+        
+        let html = '<div class="report-summary"><div class="report-stat green"><div class="num">' + list.length + '</div><div class="lbl">منتجات مباعة</div></div>' +
+            '<div class="report-stat gold"><div class="num">' + formatMoney(list.reduce(function(s, x) { return s + x.total; }, 0)) + '</div><div class="lbl">إجمالي المبيعات</div></div></div>';
+        
+        html += '<div class="report-table-header" style="grid-template-columns: 0.5fr 1.8fr 0.8fr 1fr 1fr;"><span>#</span><span>المنتج</span><span>الكمية</span><span>المبيعات</span><span>الربح</span></div>';
+        list.forEach(function(p, i) {
+            const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i + 1);
+            html += '<div class="report-table-row" style="grid-template-columns: 0.5fr 1.8fr 0.8fr 1fr 1fr;">' +
+                '<span>' + medal + '</span>' +
+                '<span><strong>' + p.name + '</strong></span>' +
+                '<span class="blue">' + p.qty + '</span>' +
+                '<span class="green">' + formatMoney(p.total) + '</span>' +
+                '<span class="gold">' + formatMoney(p.profit) + '</span>' +
+            '</div>';
+        });
+        container.innerHTML = html;
+    } else if (type === 'customers') {
+        const customerStats = {};
+        sales.forEach(function(s) {
+            const c = s.customer || 'عميل نقدي';
+            if (!customerStats[c]) customerStats[c] = { name: c, total: 0, count: 0 };
+            customerStats[c].total += s.total || 0;
+            customerStats[c].count++;
+        });
+        const list = Object.values(customerStats).sort(function(a, b) { return b.total - a.total; });
+        
+        let html = '<div class="report-summary"><div class="report-stat green"><div class="num">' + list.length + '</div><div class="lbl">عدد العملاء</div></div>' +
+            '<div class="report-stat gold"><div class="num">' + formatMoney(list.reduce(function(s, x) { return s + x.total; }, 0)) + '</div><div class="lbl">إجمالي المشتريات</div></div></div>';
+        
+        html += '<div class="report-table-header" style="grid-template-columns: 0.5fr 1.8fr 1fr 1fr;"><span>#</span><span>العميل</span><span>المشتريات</span><span>الفواتير</span></div>';
+        list.forEach(function(c, i) {
+            const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i + 1);
+            html += '<div class="report-table-row" style="grid-template-columns: 0.5fr 1.8fr 1fr 1fr;">' +
+                '<span>' + medal + '</span>' +
+                '<span><strong>' + c.name + '</strong></span>' +
+                '<span class="green">' + formatMoney(c.total) + '</span>' +
+                '<span class="blue">' + c.count + '</span>' +
+            '</div>';
+        });
+        container.innerHTML = html;
     }
 };
 
@@ -2427,6 +2553,7 @@ window.renderUsers = function() {
 };
 
 window.saveUser = function() {
+    if (!canManageUsers()) { showToast('⚠️ لا تملك صلاحية', 'error'); return; }
     const id = $('userId') ? $('userId').value : '';
     const name = $('userName') ? $('userName').value.trim() : '';
     const password = $('userPassword') ? $('userPassword').value.trim() : '';
@@ -2454,12 +2581,12 @@ window.resetUserForm = function() {
 };
 
 window.editUser = function(id) {
+    if (!canManageUsers()) { showToast('⚠️ لا تملك صلاحية', 'error'); return; }
     const u = users.find(function(us) { return us.id == id; });
     if (!u) return;
     if ($('userId')) $('userId').value = u.id;
     if ($('userName')) $('userName').value = u.name;
-    if ($('userPassword'))
-                $('userPassword').value = u.password;
+    if ($('userPassword')) $('userPassword').value = u.password;
     if ($('userRole')) $('userRole').value = u.role;
     if ($('userFormTitle')) $('userFormTitle').textContent = '✏️ تعديل';
     if ($('userSaveBtnText')) $('userSaveBtnText').textContent = 'حفظ';
@@ -2467,6 +2594,7 @@ window.editUser = function(id) {
 };
 
 window.deleteUser = function(id) {
+    if (!canManageUsers()) { showToast('⚠️ لا تملك صلاحية', 'error'); return; }
     const u = users.find(function(us) { return us.id == id; });
     if (!u) return;
     if (!confirm('⚠️ حذف "' + u.name + '"؟')) return;
@@ -2543,6 +2671,7 @@ window.renderSettings = function() {
 };
 
 window.saveCompanySettings = function() {
+    if (!isAdmin()) { showToast('⚠️ لا تملك صلاحية', 'error'); return; }
     companyData.name = $('setCompanyName') ? $('setCompanyName').value.trim() : 'الميزان';
     companyData.phone = $('setCompanyPhone') ? $('setCompanyPhone').value.trim() : '';
     companyData.address = $('setCompanyAddress') ? $('setCompanyAddress').value.trim() : '';
@@ -2571,6 +2700,7 @@ window.exportData = function() {
 };
 
 window.importData = function(event) {
+    if (!isAdmin()) { showToast('⚠️ لا تملك صلاحية', 'error'); return; }
     const file = event.target.files[0];
     if (!file) return;
     if (!confirm('⚠️ سيتم استبدال البيانات. متابعة؟')) return;
@@ -2606,6 +2736,7 @@ window.saveAll = function() {
 };
 
 window.clearAllData = function() {
+    if (!isAdmin()) { showToast('⚠️ لا تملك صلاحية', 'error'); return; }
     if (!confirm('⚠️ مسح جميع البيانات؟')) return;
     if (!confirm('⚠️ تأكيد نهائي؟')) return;
     ['products','sales','purchases','customers','suppliers','cashBoxes','expenses','treasury','payments','returns','users','companyData'].forEach(function(k) {
@@ -2648,7 +2779,7 @@ window.checkLogin = function() {
 
     if (user.password !== password) {
         if (error) { error.textContent = '⚠️ كلمة المرور خاطئة'; error.classList.add('show'); }
-        $('loginPassword').value = '';
+        if ($('loginPassword')) $('loginPassword').value = '';
         setTimeout(function() { if (error) error.classList.remove('show'); }, 3000);
         return;
     }
@@ -2657,7 +2788,7 @@ window.checkLogin = function() {
     localStorage.setItem('mizan_current_user', JSON.stringify({ id: user.id, name: user.name, role: user.role }));
 
     if (error) error.classList.remove('show');
-    $('loginPassword').value = '';
+    if ($('loginPassword')) $('loginPassword').value = '';
 
     const loginCont = $('loginContainer');
     const appCont = $('appContent');
@@ -2705,14 +2836,24 @@ window.updateUserUI = function() {
 window.applyPermissions = function() {
     if (!currentUser) return;
     const role = currentUser.role;
+    
+    // ✅ تطبيق الصلاحيات على العناصر التي تحتوي على data-permission
     document.querySelectorAll('[data-permission]').forEach(function(el) {
         const perm = el.dataset.permission;
         el.style.display = hasPermission(perm) ? '' : 'none';
     });
-    const userMenuItem = document.querySelector('[onclick*="users"]');
-    if (userMenuItem) userMenuItem.style.display = (role === 'admin' || role === 'manager') ? '' : 'none';
-    const settingsMenuItem = document.querySelector('[onclick*="settings"]');
-    if (settingsMenuItem) settingsMenuItem.style.display = (role === 'admin') ? '' : 'none';
+    
+    // إخفاء قائمة المستخدمين لغير المدير والمشرف
+    const userMenuItem = document.querySelector('button[onclick*="users"]');
+    if (userMenuItem) {
+        userMenuItem.style.display = (role === 'admin' || role === 'manager') ? '' : 'none';
+    }
+    
+    // إخفاء الإعدادات لغير المدير
+    const settingsMenuItem = document.querySelector('button[onclick*="settings"]');
+    if (settingsMenuItem) {
+        settingsMenuItem.style.display = (role === 'admin') ? '' : 'none';
+    }
 };
 
 // ═══════════════════════════════════════════════════════════
@@ -2807,6 +2948,18 @@ window.init = function() {
     renderUsers();
     renderSettings();
 
+    // ✅ التحقق من وجود مستخدم مسجل مسبقاً
+    const savedUser = localStorage.getItem('mizan_current_user');
+    if (savedUser) {
+        try {
+            const u = JSON.parse(savedUser);
+            const fullUser = users.find(function(us) { return us.id == u.id; });
+            if (fullUser) {
+                // لا نسجل تلقائياً - ننتظر اختيار المستخدم
+            }
+        } catch (e) {}
+    }
+
     console.log('✅ التطبيق جاهز!');
     console.log('👥 المستخدمون:', users.length);
     console.log('🔐 المستخدم الافتراضي: المدير / 123456');
@@ -2816,5 +2969,5 @@ window.init = function() {
 document.addEventListener('DOMContentLoaded', function() {
     init();
     setInterval(updateClock, 1000);
-    console.log('✅ تم تحميل app.js كاملاً - v15 مع دعم الخصم نقدي/مئوي');
+    console.log('✅ تم تحميل app.js كاملاً - النسخة المُصلحة v15');
 });
