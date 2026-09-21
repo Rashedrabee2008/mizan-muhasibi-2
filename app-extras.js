@@ -25,26 +25,16 @@ console.log('🚀 تحميل app-extras.js - الإضافات الشاملة');
 console.log('📋 15 ميزة سيتم إضافتها...');
 
 // ═══════════════════════════════════════════════════════════
-// 1. 📱 تحويل PWA (تطبيق موبايل)
+// 1. 📱 PWA — نسخة مبسطة (بدون Service Worker)
 // ═══════════════════════════════════════════════════════════
 (function initPWA() {
-    // إضافة manifest
-    let manifestLink = document.querySelector('link[rel="manifest"]');
-    if (!manifestLink) {
-        manifestLink = document.createElement('link');
-        manifestLink.rel = 'manifest';
-        manifestLink.href = 'manifest.json';
-        document.head.appendChild(manifestLink);
-    }
-
-    // إضافة meta tags
+    // فقط meta tags — بدون Service Worker
     const metaTags = [
         { name: 'mobile-web-app-capable', content: 'yes' },
         { name: 'apple-mobile-web-app-capable', content: 'yes' },
         { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' },
         { name: 'apple-mobile-web-app-title', content: 'الميزان' },
-        { name: 'application-name', content: 'الميزان' },
-        { name: 'theme-color', content: '#0D0D0D' }
+        { name: 'application-name', content: 'الميزان' }
     ];
     
     metaTags.forEach(function(tag) {
@@ -56,54 +46,7 @@ console.log('📋 15 ميزة سيتم إضافتها...');
         }
     });
 
-    // تسجيل Service Worker (إن لم يكن مسجلاً)
-    if ('serviceWorker' in navigator && !window._pwaSwRegistered) {
-        window._pwaSwRegistered = true;
-        window.addEventListener('load', function() {
-            navigator.serviceWorker.register('service-worker.js')
-                .then(function(reg) {
-                    console.log('✅ PWA مسجل:', reg.scope);
-                })
-                .catch(function(err) {
-                    console.log('ℹ️ Service Worker: ' + err.message);
-                });
-        });
-    }
-
-    // زر التثبيت
-    let deferredPrompt = null;
-    window.addEventListener('beforeinstallprompt', function(e) {
-        e.preventDefault();
-        deferredPrompt = e;
-        console.log('📱 التطبيق جاهز للتثبيت');
-        
-        // إظهار زر التثبيت
-        if (!document.getElementById('pwaInstallBtn')) {
-            const btn = document.createElement('button');
-            btn.id = 'pwaInstallBtn';
-            btn.innerHTML = '📱 تثبيت التطبيق';
-            btn.style.cssText = 'position:fixed;bottom:100px;right:15px;z-index:9999;' +
-                'background:linear-gradient(135deg,#C9A94E,#B8953A);color:#0D0D0D;' +
-                'border:none;padding:10px 14px;border-radius:10px;font-weight:900;' +
-                'cursor:pointer;box-shadow:0 4px 12px rgba(201,169,78,0.4);' +
-                'font-family:inherit;font-size:13px;';
-            btn.onclick = function() {
-                if (deferredPrompt) {
-                    deferredPrompt.prompt();
-                    deferredPrompt.userChoice.then(function(choice) {
-                        if (choice.outcome === 'accepted') {
-                            console.log('✅ تم تثبيت التطبيق');
-                            btn.remove();
-                        }
-                        deferredPrompt = null;
-                    });
-                }
-            };
-            document.body.appendChild(btn);
-        }
-    });
-
-    console.log('✅ PWA: جاهز');
+    console.log('✅ PWA: جاهز (بدون SW)');
 })();
 
 // ═══════════════════════════════════════════════════════════
