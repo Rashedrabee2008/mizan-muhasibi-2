@@ -1464,3 +1464,190 @@ body { background: #0D0D0D; color: #F5E6C8; padding: 10px 10px 100px !important;
 .bottom-nav .nav-item[data-page="more"] i {
     font-size: 18px !important;
 }
+
+/* ═══════════════════════════════════════════════════════════
+   🔧 إصلاح ثبات الهيدر (منع الحركة)
+   ═══════════════════════════════════════════════════════════ */
+
+/* تثبيت الهيدر بشكل نهائي */
+.top-header {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow: hidden !important;
+    padding: 8px 10px !important;
+    gap: 4px !important;
+    min-height: 50px !important;
+    max-height: 50px !important;
+    box-sizing: border-box !important;
+}
+
+.top-header .logo-icon {
+    flex-shrink: 0 !important;
+    font-size: 18px !important;
+    width: 24px !important;
+    height: 24px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.top-header .header-text {
+    flex: 1 1 0% !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+}
+
+.top-header .header-text h1 {
+    font-size: 15px !important;
+    line-height: 1.2 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+.top-header .header-text .sub-title {
+    font-size: 9px !important;
+    line-height: 1.2 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+.top-header .header-actions {
+    flex-shrink: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 3px !important;
+    margin-right: auto !important;
+    flex-wrap: nowrap !important;
+}
+
+/* توحيد حجم كل الأزرار في الهيدر */
+.top-header .header-actions > * {
+    height: 28px !important;
+    min-width: 28px !important;
+    max-width: 50px !important;
+    padding: 0 6px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 11px !important;
+    border-radius: 6px !important;
+    flex-shrink: 0 !important;
+    box-sizing: border-box !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+}
+
+/* شريط التاريخ - حجم صغير */
+.top-header .header-actions .clock {
+    font-size: 9px !important;
+    padding: 0 5px !important;
+    font-family: 'Courier New', monospace !important;
+    direction: ltr !important;
+    max-width: 75px !important;
+}
+
+/* زر المستخدم - إخفاء الاسم */
+.top-header .header-actions .user-badge span {
+    display: none !important;
+}
+
+.top-header .header-actions .user-badge {
+    border-radius: 6px !important;
+    padding: 0 6px !important;
+}
+
+.top-header .header-actions .user-badge i {
+    font-size: 12px !important;
+}
+
+/* الأزرار الصغيرة */
+.top-header .header-actions .lock-btn,
+.top-header .header-actions .cloud-btn,
+.top-header .header-actions #themeToggleBtn,
+.top-header .header-actions #langToggleBtn {
+    width: 30px !important;
+    padding: 0 !important;
+    font-size: 12px !important;
+    font-weight: 900 !important;
+}
+
+.top-header .header-actions .lock-btn i,
+.top-header .header-actions .cloud-btn i {
+    font-size: 12px !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   🎨 إصلاح تبويبات التقارير (شبكة ثابتة)
+   ═══════════════════════════════════════════════════════════ */
+
+.report-tabs {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 6px !important;
+    padding: 8px !important;
+    background: #0D0D0D !important;
+    border-radius: 12px !important;
+    border: 1px solid #2D2D2D !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+}
+
+.report-tab {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 8px 4px !important;
+    border-radius: 8px !important;
+    background: transparent !important;
+    border: 2px solid transparent !important;
+    color: #A89070 !important;
+    font-size: 10px !important;
+    font-weight: 800 !important;
+    cursor: pointer !important;
+    font-family: inherit !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 3px !important;
+    min-height: 55px !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+.report-tab i {
+    font-size: 15px !important;
+    line-height: 1 !important;
+}
+
+.report-tab.active {
+    background: linear-gradient(135deg, #C9A94E, #B8953A) !important;
+    color: #0D0D0D !important;
+    border-color: #C9A94E !important;
+    box-shadow: 0 4px 12px rgba(201, 169, 78, 0.3) !important;
+}
+
+.report-tab:hover:not(.active) {
+    background: #2A2A2A !important;
+    color: #F5E6C8 !important;
+}
+
+/* الموبايل */
+@media (max-width: 480px) {
+    .report-tabs {
+        grid-template-columns: repeat(3, 1fr) !important;
+    }
+    
+    .report-tab {
+        min-height: 50px !important;
+        font-size: 9px !important;
+        padding: 6px 2px !important;
+    }
+    
+    .report-tab i {
+        font-size: 14px !important;
+    }
+}
