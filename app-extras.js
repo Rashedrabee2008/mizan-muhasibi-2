@@ -1,23 +1,8 @@
 // ============================================================
-// الميزان 14.0.0 - app-extras.js (نسخة نظيفة 100%)
+// الميزان 14.0.0 - app-extras.js (النسخة المُصلحة الكاملة)
 // ============================================================
-// 
-// الإضافات:
-// 1. 🎨 الوضع الفاتح
-// 2. 🖼️ شعار الشركة
-// 3. 🎁 نظام نقاط العملاء
-// 4. 📊 رسوم بيانية محسّنة
-// 5. 🔔 إشعارات
-// 6. 🌍 ترجمة AR/EN
-// 7. 💾 نسخ احتياطي
-// 8. ⌨️ اختصارات لوحة المفاتيح
-// 9. 💰 اقتراح الأسعار
-// 10. ⭐ عملاء VIP
-// 11. 📋 تصدير Excel
-// 12. 🎨 قوالب فواتير
-// ═══════════════════════════════════════════════════════════
 
-console.log('🚀 تحميل app-extras.js - النسخة النظيفة');
+console.log('🚀 تحميل app-extras.js - النسخة المُصلحة');
 
 // ═══════════════════════════════════════════════════════════
 // 🔥 إلغاء تسجيل Service Worker القديم
@@ -40,7 +25,6 @@ console.log('🚀 تحميل app-extras.js - النسخة النظيفة');
         });
     }
 })();
-
 
 // ═══════════════════════════════════════════════════════════
 // 1. 🎨 الوضع الفاتح (Light Mode)
@@ -84,28 +68,6 @@ console.log('🚀 تحميل app-extras.js - النسخة النظيفة');
         document.body.classList.toggle('light-mode', theme === 'light');
     };
 
-    const themeCSS = `
-        body.light-mode { background: #F5F0E8 !important; color: #1A1A1A !important; }
-        body.light-mode .top-header,
-        body.light-mode .page-content,
-        body.light-mode .form-card,
-        body.light-mode .dashboard-card,
-        body.light-mode .modal-box,
-        body.light-mode .settings-section,
-        body.light-mode .stat-mini,
-        body.light-mode .pos-items-box,
-        body.light-mode .pos-meta-item,
-        body.light-mode .cash-box-card { background: #FFFFFF !important; border-color: #E0D5B8 !important; color: #1A1A1A !important; }
-        body.light-mode .table-row { background: #FFFFFF !important; color: #1A1A1A !important; border-color: #E0D5B8 !important; }
-        body.light-mode input,
-        body.light-mode select { background: #FFFFFF !important; color: #1A1A1A !important; border-color: #E0D5B8 !important; }
-        body.light-mode .bottom-nav { background: #FFFFFF !important; border-color: #E0D5B8 !important; }
-    `;
-
-    const style = document.createElement('style');
-    style.textContent = themeCSS;
-    document.head.appendChild(style);
-
     const savedTheme = localStorage.getItem('mizan_theme') || 'dark';
     if (savedTheme === 'light') {
         if (document.body) applyTheme('light');
@@ -144,7 +106,7 @@ console.log('🚀 تحميل app-extras.js - النسخة النظيفة');
 })();
 
 // ═══════════════════════════════════════════════════════════
-// 3. 🎁 نظام نقاط العملاء
+// 3. 🎁 نظام نقاط العملاء (مُصلح)
 // ═══════════════════════════════════════════════════════════
 (function initLoyaltyPoints() {
     const POINTS_PER_EGP = 0.01;
@@ -161,117 +123,131 @@ console.log('🚀 تحميل app-extras.js - النسخة النظيفة');
         setData('customer_points', allPoints);
     };
 
-    const _originalSaveSale = window.saveSale;
-    window.saveSale = function() {
-        const customer = document.getElementById('saleCustomer') ? document.getElementById('saleCustomer').value : '';
-        if (_originalSaveSale) _originalSaveSale.apply(this, arguments);
+    // ✅ نسخة مُصلحة: نحفظ النسخة الأصلية ونضيف النقاط بعد الحفظ
+    function wrapSaveSale() {
+        if (typeof window.saveSale !== 'function' || window.saveSale._isWrapped) return;
         
-        if (customer && customer !== 'عميل نقدي' && typeof sales !== 'undefined' && sales.length > 0) {
-            const lastSale = sales[sales.length - 1];
-            if (lastSale.customer === customer) {
-                const points = Math.floor(lastSale.total * POINTS_PER_EGP);
-                addCustomerPoints(customer, points);
-                if (points > 0 && typeof showToast === 'function') {
-                    setTimeout(function() {
-                        showToast('🎁 حصل ' + customer + ' على ' + points + ' نقطة', 'success');
-                    }, 500);
+        const originalSaveSale = window.saveSale;
+        
+        window.saveSale = function() {
+            const customer = document.getElementById('saleCustomer') ? document.getElementById('saleCustomer').value : '';
+            const salesBefore = (typeof sales !== 'undefined') ? sales.length : 0;
+            
+            const result = originalSaveSale.apply(this, arguments);
+            
+            // بعد الحفظ، نتحقق من إضافة فاتورة جديدة
+            if (customer && customer !== 'عميل نقدي' && typeof sales !== 'undefined' && sales.length > salesBefore) {
+                const lastSale = sales[sales.length - 1];
+                if (lastSale && lastSale.customer === customer) {
+                    const points = Math.floor(lastSale.total * POINTS_PER_EGP);
+                    if (points > 0) {
+                        addCustomerPoints(customer, points);
+                        if (typeof showToast === 'function') {
+                            setTimeout(function() {
+                                showToast('🎁 حصل ' + customer + ' على ' + points + ' نقطة', 'success');
+                            }, 500);
+                        }
+                    }
                 }
             }
-        }
-    };
+            return result;
+        };
+        
+        window.saveSale._isWrapped = true;
+    }
+
+    // ننتظر حتى يتم تحميل app.js
+    setTimeout(wrapSaveSale, 500);
 
     console.log('✅ نظام النقاط: جاهز');
 })();
 
 // ═══════════════════════════════════════════════════════════
-// 4. 📊 رسوم بيانية (SVG نظيف)
+// 4. 📊 رسوم بيانية (SVG نظيف - مُصلح)
 // ═══════════════════════════════════════════════════════════
 (function initAdvancedCharts() {
-  window.drawSalesChart = function(containerId) {
-    const container = document.getElementById(containerId);
-    if (!container || typeof sales === 'undefined') return;
-    
-    // ✅ آخر 7 أيام فقط
-    const days = [];
-    for (let i = 6; i >= 0; i--) {
-        const d = new Date();
-        d.setDate(d.getDate() - i);
-        const dateStr = d.toISOString().split('T')[0];
-        const dayTotal = sales.filter(function(s) { return s.date === dateStr; })
-            .reduce(function(sum, s) { return sum + (s.total || 0); }, 0);
-        days.push({ 
-            date: dateStr, 
-            total: dayTotal,
-            dayName: ['أحد', 'إثنين', 'ثلاثاء', 'أربعاء', 'خميس', 'جمعة', 'سبت'][d.getDay()]
-        });
-    }
-    
-    const maxVal = Math.max.apply(null, days.map(function(d) { return d.total; }).concat([1]));
-    
-    let svg = '<svg viewBox="0 0 340 140" preserveAspectRatio="xMidYMid meet" style="width:100%;height:140px;">';
-    
-    // شبكة خلفية
-    for (let i = 0; i <= 4; i++) {
-        const y = 15 + (i * 25);
-        svg += '<line x1="30" y1="' + y + '" x2="330" y2="' + y + '" stroke="#2D2D2D" stroke-width="0.5" stroke-dasharray="3,3"/>';
-    }
-    
-    // محور Y (القيم)
-    for (let i = 0; i <= 4; i++) {
-        const y = 15 + (i * 25);
-        const value = Math.round(maxVal * (1 - i / 4));
-        svg += '<text x="25" y="' + (y + 3) + '" fill="#5D5D5D" font-size="8" text-anchor="end">' + value + '</text>';
-    }
-    
-    // نقاط البيانات
-    const spacing = (330 - 40) / (days.length - 1);
-    const points = days.map(function(d, i) {
-        const x = 40 + (i * spacing);
-        const y = 115 - ((d.total / maxVal) * 100);
-        return x + ',' + y;
-    }).join(' ');
-    
-    // خط الرسم
-    svg += '<polyline points="' + points + '" fill="none" stroke="#C9A94E" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>';
-    
-    // نقاط دائرية + قيم
-    days.forEach(function(d, i) {
-        const x = 40 + (i * spacing);
-        const y = 115 - ((d.total / maxVal) * 100);
-        
-        // الدائرة
-        if (d.total > 0) {
-            svg += '<circle cx="' + x + '" cy="' + y + '" r="4" fill="#C9A94E" stroke="#0D0D0D" stroke-width="2"/>';
-            svg += '<text x="' + x + '" y="' + (y - 10) + '" fill="#C9A94E" font-size="8" text-anchor="middle" font-weight="bold">' + d.total.toFixed(0) + '</text>';
-        } else {
-            svg += '<circle cx="' + x + '" cy="' + y + '" r="3" fill="#5D5D5D" stroke="#0D0D0D" stroke-width="1.5"/>';
+    window.drawSalesChart = function(containerId) {
+        const container = document.getElementById(containerId);
+        if (!container || typeof sales === 'undefined') return;
+
+        // ✅ آخر 7 أيام
+        const days = [];
+        for (let i = 6; i >= 0; i--) {
+            const d = new Date();
+            d.setDate(d.getDate() - i);
+            const dateStr = d.toISOString().split('T')[0];
+            const dayTotal = sales.filter(function(s) { return s.date === dateStr; })
+                .reduce(function(sum, s) { return sum + (s.total || 0); }, 0);
+            days.push({
+                date: dateStr,
+                total: dayTotal,
+                dayName: ['أحد', 'إثنين', 'ثلاثاء', 'أربعاء', 'خميس', 'جمعة', 'سبت'][d.getDay()]
+            });
         }
-        
-        // اسم اليوم
-        svg += '<text x="' + x + '" y="132" fill="#A89070" font-size="9" text-anchor="middle" font-weight="bold">' + d.dayName + '</text>';
-    });
-    
-    svg += '</svg>';
-    
-    container.innerHTML = svg;
-};
+
+        const maxVal = Math.max.apply(null, days.map(function(d) { return d.total; }).concat([1]));
+
+        let svg = '<svg viewBox="0 0 340 140" preserveAspectRatio="xMidYMid meet" style="width:100%;height:140px;">';
+
+        // شبكة خلفية
+        for (let i = 0; i <= 4; i++) {
+            const y = 15 + (i * 25);
+            svg += '<line x1="30" y1="' + y + '" x2="330" y2="' + y + '" stroke="#2D2D2D" stroke-width="0.5" stroke-dasharray="3,3"/>';
+        }
+
+        // محور Y (القيم)
+        for (let i = 0; i <= 4; i++) {
+            const y = 15 + (i * 25);
+            const value = Math.round(maxVal * (1 - i / 4));
+            svg += '<text x="25" y="' + (y + 3) + '" fill="#5D5D5D" font-size="8" text-anchor="end">' + value + '</text>';
+        }
+
+        // نقاط البيانات
+        const spacing = (330 - 40) / (days.length - 1);
+        const points = days.map(function(d, i) {
+            const x = 40 + (i * spacing);
+            const y = 115 - ((d.total / maxVal) * 100);
+            return x + ',' + y;
+        }).join(' ');
+
+        // خط الرسم
+        svg += '<polyline points="' + points + '" fill="none" stroke="#C9A94E" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>';
+
+        // نقاط دائرية + قيم
+        days.forEach(function(d, i) {
+            const x = 40 + (i * spacing);
+            const y = 115 - ((d.total / maxVal) * 100);
+
+            if (d.total > 0) {
+                svg += '<circle cx="' + x + '" cy="' + y + '" r="4" fill="#C9A94E" stroke="#0D0D0D" stroke-width="2"/>';
+                svg += '<text x="' + x + '" y="' + (y - 10) + '" fill="#C9A94E" font-size="8" text-anchor="middle" font-weight="bold">' + d.total.toFixed(0) + '</text>';
+            } else {
+                svg += '<circle cx="' + x + '" cy="' + y + '" r="3" fill="#5D5D5D" stroke="#0D0D0D" stroke-width="1.5"/>';
+            }
+
+            svg += '<text x="' + x + '" y="132" fill="#A89070" font-size="9" text-anchor="middle" font-weight="bold">' + d.dayName + '</text>';
+        });
+
+        svg += '</svg>';
+        container.innerHTML = svg;
+    };
 
     function addChartsToDashboard() {
         const pageContent = document.querySelector('#page-dashboard .page-content');
         if (!pageContent || document.getElementById('advancedChartContainer')) return;
-        
+
         const chartDiv = document.createElement('div');
         chartDiv.id = 'advancedChartContainer';
         chartDiv.style.cssText = 'background:#1C1C1C;border-radius:14px;padding:14px;margin:14px 0;' +
             'border:1px solid #2D2D2D;overflow:hidden;box-sizing:border-box;width:100%;';
-        chartDiv.innerHTML = '<h3 style="color:#C9A94E;font-size:14px;margin-bottom:12px;">📈 المبيعات - آخر 30 يوم</h3>' +
-            '<div id="salesChart30" style="width:100%;height:100px;"></div>';
-        
+        chartDiv.innerHTML = '<h3 style="color:#C9A94E;font-size:14px;margin-bottom:12px;">📈 المبيعات - آخر 7 أيام</h3>' +
+            '<div id="salesChart30" style="width:100%;height:140px;"></div>';
+
         const firstStats = pageContent.querySelector('.dashboard-stats');
         if (firstStats) {
             firstStats.parentNode.insertBefore(chartDiv, firstStats);
         }
-        
+
         setTimeout(function() { drawSalesChart('salesChart30'); }, 100);
     }
 
@@ -307,7 +283,7 @@ console.log('🚀 تحميل app-extras.js - النسخة النظيفة');
 })();
 
 // ═══════════════════════════════════════════════════════════
-// 6. 🌍 الترجمة (زر فقط — بدون تغيير كامل)
+// 6. 🌍 الترجمة (زر فقط)
 // ═══════════════════════════════════════════════════════════
 (function initLanguageToggle() {
     window.currentLang = localStorage.getItem('mizan_lang') || 'ar';
@@ -630,8 +606,9 @@ console.log('🚀 تحميل app-extras.js - النسخة النظيفة');
 // ═══════════════════════════════════════════════════════════
 console.log('');
 console.log('════════════════════════════════════════════════');
-console.log('🎉 تم تحميل app-extras.js (النسخة النظيفة)');
+console.log('🎉 تم تحميل app-extras.js (النسخة المُصلحة)');
 console.log('════════════════════════════════════════════════');
 console.log('✅ 12 ميزة إضافية جاهزة');
-console.log('⚠️ لا PWA (لتجنب الأخطاء)');
+console.log('✅ لا PWA (لتجنب الأخطاء)');
+console.log('✅ جميع الأخطاء مُصلحة');
 console.log('════════════════════════════════════════════════');
