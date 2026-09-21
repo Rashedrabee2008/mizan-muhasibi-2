@@ -1032,8 +1032,27 @@ window.updateSaleTotals = function() {
     const invoiceType = getRadioValue('saleInvoiceType', 'simple');
     const isTax = invoiceType === 'tax';
     const vat = isTax ? (subtotal * (vatSettings.defaultVAT / 100)) : 0;
-    const discount = parseFloat($('saleDiscount') ? $('saleDiscount').value : 0) || 0;
-    const levelDiscount = parseFloat($('saleLevelDiscount') ? $('saleLevelDiscount').value : 0) || 0;
+
+    // ✅ الخصم النقدي (مبلغ ثابت أو نسبة)
+    const discountValue = parseFloat($('saleDiscount') ? $('saleDiscount').value : 0) || 0;
+    const discountType = $('saleDiscountType') ? $('saleDiscountType').value : 'fixed';
+    let discount = 0;
+    if (discountType === 'percent') {
+        discount = (subtotal + vat) * (discountValue / 100);
+    } else {
+        discount = discountValue;
+    }
+
+    // ✅ خصم المستوى (مبلغ ثابت أو نسبة)
+    const levelDiscountValue = parseFloat($('saleLevelDiscount') ? $('saleLevelDiscount').value : 0) || 0;
+    const levelDiscountType = $('saleLevelDiscountType') ? $('saleLevelDiscountType').value : 'fixed';
+    let levelDiscount = 0;
+    if (levelDiscountType === 'percent') {
+        levelDiscount = (subtotal + vat) * (levelDiscountValue / 100);
+    } else {
+        levelDiscount = levelDiscountValue;
+    }
+
     const grandTotal = Math.max(0, subtotal + vat - discount - levelDiscount);
 
     if ($('statItemsCount')) $('statItemsCount').textContent = currentSaleItems.length;
