@@ -793,7 +793,7 @@ console.log('📋 5 ميزات جديدة...');
         attempts++;
         addCouponButton();
         addCouponMenu();
-        if (attempts < 15) {
+        if (attempts < 5) {
             setTimeout(tryAdd, 1000);
         }
     }
