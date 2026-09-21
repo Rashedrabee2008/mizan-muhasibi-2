@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <meta name="theme-color" content="#0D0D0D" />
     
-    <!-- PWA Meta (بدون ملفات خارجية) -->
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -14,7 +13,6 @@
     
     <title>الميزان - نظام محاسبة</title>
     
-    <!-- الأيقونة SVG مدمجة -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚖️</text></svg>" />
     
     <link rel="stylesheet" href="style.css" />
@@ -23,7 +21,7 @@
 </head>
 <body>
 
-    <!-- ============ شاشة تسجيل الدخول ============ -->
+    <!-- شاشة تسجيل الدخول -->
     <div id="loginContainer" class="login-container">
         <div class="login-box">
             <div class="logo"><i class="fas fa-scale-balanced"></i></div>
@@ -74,7 +72,7 @@
             </div>
         </header>
 
-        <!-- ============ لوحة التحكم ============ -->
+        <!-- لوحة التحكم -->
         <div id="page-dashboard" class="page-container active">
             <div class="page-content">
                 <h2><i class="fas fa-chart-pie"></i> لوحة التحكم</h2>
@@ -101,7 +99,7 @@
             </div>
         </div>
 
-        <!-- ============ المخزون ============ -->
+        <!-- المخزون -->
         <div id="page-inventory" class="page-container">
             <div class="page-content">
                 <h2><i class="fas fa-box"></i> المخزون</h2>
@@ -121,7 +119,7 @@
                         <div class="form-group"><label>الحد الأدنى</label><input type="number" id="productMin" value="5" min="0" step="1" /></div>
                     </div>
                     <div class="form-actions">
-                        <button class="btn btn-primary" onclick="saveProduct()"><i class="fas fa-save"></i> <span id="productSaveBtnText">إضافة</span></button>
+                        <button class="btn btn-primary" data-permission="add" onclick="saveProduct()"><i class="fas fa-save"></i> <span id="productSaveBtnText">إضافة</span></button>
                         <button class="btn btn-secondary" onclick="resetProductForm()"><i class="fas fa-times"></i> إلغاء</button>
                     </div>
                 </div>
@@ -130,7 +128,7 @@
             </div>
         </div>
 
-        <!-- ============ الكاشير ============ -->
+        <!-- الكاشير -->
         <div id="page-cashier" class="page-container">
             <div class="page-content">
                 <h2><i class="fas fa-cash-register"></i> الكاشير</h2>
@@ -142,9 +140,9 @@
                         <span class="pos-num" id="invNumberDisplay">#1</span>
                     </div>
                     <div class="pos-actions">
-                        <button class="pos-btn pos-btn-save" onclick="saveSale()"><i class="fas fa-save"></i><span>حفظ</span></button>
-                        <button class="pos-btn pos-btn-print" onclick="saveSaleAndPrint()"><i class="fas fa-print"></i><span>حفظ وطباعة</span></button>
-                        <button class="pos-btn pos-btn-thermal" onclick="saveSaleAndThermal()"><i class="fas fa-receipt"></i><span>حرارية</span></button>
+                        <button class="pos-btn pos-btn-save" data-permission="add" onclick="saveSale()"><i class="fas fa-save"></i><span>حفظ</span></button>
+                        <button class="pos-btn pos-btn-print" data-permission="add" onclick="saveSaleAndPrint()"><i class="fas fa-print"></i><span>حفظ وطباعة</span></button>
+                        <button class="pos-btn pos-btn-thermal" data-permission="add" onclick="saveSaleAndThermal()"><i class="fas fa-receipt"></i><span>حرارية</span></button>
                         <button class="pos-btn pos-btn-cancel" onclick="clearSale()"><i class="fas fa-times"></i><span>إلغاء</span></button>
                     </div>
                 </div>
@@ -237,27 +235,27 @@
                     </div>
 
                     <div class="pos-discount-grid">
-    <div class="pos-field">
-        <label>💸 الخصم</label>
-        <div style="display:flex;gap:4px;">
-            <input type="number" id="saleDiscount" class="pos-input" value="0" min="0" step="0.01" oninput="updateSaleTotals()" style="flex:2;" />
-            <select id="saleDiscountType" class="pos-select" onchange="updateSaleTotals()" style="flex:1;min-width:70px;">
-                <option value="fixed">💰 ج.م</option>
-                <option value="percent">% نسبة</option>
-            </select>
-        </div>
-    </div>
-    <div class="pos-field">
-        <label>🎁 خصم المستوى</label>
-        <div style="display:flex;gap:4px;">
-            <input type="number" id="saleLevelDiscount" class="pos-input" value="0" min="0" step="0.01" oninput="updateSaleTotals()" style="flex:2;" />
-            <select id="saleLevelDiscountType" class="pos-select" onchange="updateSaleTotals()" style="flex:1;min-width:70px;">
-                <option value="fixed">💰 ج.م</option>
-                <option value="percent">% نسبة</option>
-            </select>
-        </div>
-    </div>
-</div>
+                        <div class="pos-field">
+                            <label>💸 الخصم</label>
+                            <div style="display:flex;gap:4px;">
+                                <input type="number" id="saleDiscount" class="pos-input" value="0" min="0" step="0.01" oninput="updateSaleTotals()" style="flex:2;" />
+                                <select id="saleDiscountType" class="pos-select" onchange="updateSaleTotals()" style="flex:1;min-width:70px;">
+                                    <option value="fixed">💰 ج.م</option>
+                                    <option value="percent">% نسبة</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="pos-field">
+                            <label>🎁 خصم المستوى</label>
+                            <div style="display:flex;gap:4px;">
+                                <input type="number" id="saleLevelDiscount" class="pos-input" value="0" min="0" step="0.01" oninput="updateSaleTotals()" style="flex:2;" />
+                                <select id="saleLevelDiscountType" class="pos-select" onchange="updateSaleTotals()" style="flex:1;min-width:70px;">
+                                    <option value="fixed">💰 ج.م</option>
+                                    <option value="percent">% نسبة</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
 
                     <div class="pos-delivery-row">
                         <div class="pos-delivery-item">
@@ -282,7 +280,7 @@
             </div>
         </div>
 
-        <!-- ============ المشتريات ============ -->
+        <!-- المشتريات -->
         <div id="page-purchases" class="page-container">
             <div class="page-content">
                 <h2><i class="fas fa-shopping-cart"></i> المشتريات</h2>
@@ -328,8 +326,8 @@
                         <div class="grand-value" id="purTotal">0.00 ج.م</div>
                     </div>
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px;">
-                        <button class="btn btn-primary" onclick="savePurchase()"><i class="fas fa-check"></i> حفظ</button>
-                        <button class="btn btn-info" onclick="savePurchaseAndPrint()"><i class="fas fa-print"></i> حفظ وطباعة</button>
+                        <button class="btn btn-primary" data-permission="add" onclick="savePurchase()"><i class="fas fa-check"></i> حفظ</button>
+                        <button class="btn btn-info" data-permission="add" onclick="savePurchaseAndPrint()"><i class="fas fa-print"></i> حفظ وطباعة</button>
                     </div>
                     <button class="btn btn-secondary btn-block" onclick="clearPurchase()" style="margin-top:6px;"><i class="fas fa-times"></i> إلغاء</button>
                 </div>
@@ -338,7 +336,7 @@
             </div>
         </div>
 
-        <!-- ============ العملاء ============ -->
+        <!-- العملاء -->
         <div id="page-customers" class="page-container">
             <div class="page-content">
                 <h2><i class="fas fa-users"></i> العملاء</h2>
@@ -354,7 +352,7 @@
                         <div class="form-group"><label>العنوان</label><input type="text" id="customerAddress" /></div>
                     </div>
                     <div class="form-actions">
-                        <button class="btn btn-primary" onclick="saveCustomer()"><i class="fas fa-save"></i> <span id="customerSaveBtnText">إضافة</span></button>
+                        <button class="btn btn-primary" data-permission="add" onclick="saveCustomer()"><i class="fas fa-save"></i> <span id="customerSaveBtnText">إضافة</span></button>
                         <button class="btn btn-secondary" onclick="resetCustomerForm()"><i class="fas fa-times"></i> إلغاء</button>
                     </div>
                 </div>
@@ -363,7 +361,7 @@
             </div>
         </div>
 
-        <!-- ============ الموردين ============ -->
+        <!-- الموردين -->
         <div id="page-suppliers" class="page-container">
             <div class="page-content">
                 <h2><i class="fas fa-truck"></i> الموردين</h2>
@@ -379,7 +377,7 @@
                         <div class="form-group"><label>العنوان</label><input type="text" id="supplierAddress" /></div>
                     </div>
                     <div class="form-actions">
-                        <button class="btn btn-primary" onclick="saveSupplier()"><i class="fas fa-save"></i> <span id="supplierSaveBtnText">إضافة</span></button>
+                        <button class="btn btn-primary" data-permission="add" onclick="saveSupplier()"><i class="fas fa-save"></i> <span id="supplierSaveBtnText">إضافة</span></button>
                         <button class="btn btn-secondary" onclick="resetSupplierForm()"><i class="fas fa-times"></i> إلغاء</button>
                     </div>
                 </div>
@@ -388,7 +386,7 @@
             </div>
         </div>
 
-        <!-- ============ الخزائن ============ -->
+        <!-- الخزائن -->
         <div id="page-cash-boxes" class="page-container">
             <div class="page-content">
                 <h2><i class="fas fa-money-bill-wave"></i> الخزائن</h2>
@@ -431,7 +429,7 @@
                         </label>
                     </div>
                     <div class="form-actions">
-                        <button class="btn btn-primary" onclick="saveCashBox()"><i class="fas fa-save"></i> <span id="cashBoxSaveBtnText">إضافة</span></button>
+                        <button class="btn btn-primary" data-permission="add" onclick="saveCashBox()"><i class="fas fa-save"></i> <span id="cashBoxSaveBtnText">إضافة</span></button>
                         <button class="btn btn-secondary" onclick="resetCashBoxForm()"><i class="fas fa-times"></i> إلغاء</button>
                     </div>
                 </div>
@@ -440,7 +438,7 @@
             </div>
         </div>
 
-        <!-- ============ المصروفات ============ -->
+        <!-- المصروفات -->
         <div id="page-expenses" class="page-container">
             <div class="page-content">
                 <h2><i class="fas fa-money-bill-wave"></i> المصروفات</h2>
@@ -472,14 +470,14 @@
                         <div class="form-group"><label>التاريخ</label><input type="date" id="expDate" /></div>
                     </div>
                     <div class="form-group"><label>💰 الخزنة *</label><select id="expCashBox" class="inv-select"><option value="">اختر...</option></select></div>
-                    <button class="btn btn-primary btn-block" onclick="saveExpense()"><i class="fas fa-save"></i> إضافة</button>
+                    <button class="btn btn-primary btn-block" data-permission="add" onclick="saveExpense()"><i class="fas fa-save"></i> إضافة</button>
                 </div>
                 <h2 style="margin-top:20px;"><i class="fas fa-list"></i> السجل</h2>
                 <div id="expensesList"></div>
             </div>
         </div>
 
-        <!-- ============ حركات الخزنة ============ -->
+        <!-- حركات الخزنة -->
         <div id="page-treasury" class="page-container">
             <div class="page-content">
                 <h2><i class="fas fa-vault"></i> حركات الخزنة</h2>
@@ -504,7 +502,7 @@
                     </div>
                     <div class="form-group"><label>💰 الخزنة</label><select id="manualCashBox" class="inv-select"><option value="">اختر...</option></select></div>
                     <div class="form-group"><label>البيان</label><input type="text" id="treasuryNote" /></div>
-                    <button class="btn btn-primary btn-block" onclick="addTreasuryTransaction()"><i class="fas fa-plus"></i> إضافة</button>
+                    <button class="btn btn-primary btn-block" data-permission="add" onclick="addTreasuryTransaction()"><i class="fas fa-plus"></i> إضافة</button>
                 </div>
                 <div class="filter-chips">
                     <button class="filter-chip active" onclick="filterTreasury('all', this)">📊 الكل</button>
@@ -520,7 +518,7 @@
             </div>
         </div>
 
-        <!-- ============ الفواتير ============ -->
+        <!-- الفواتير -->
         <div id="page-invoices" class="page-container">
             <div class="page-content">
                 <h2><i class="fas fa-file-invoice"></i> فواتير البيع</h2>
@@ -541,7 +539,7 @@
             </div>
         </div>
 
-        <!-- ============ التحصيل والسداد ============ -->
+        <!-- التحصيل والسداد -->
         <div id="page-payments" class="page-container">
             <div class="page-content">
                 <h2><i class="fas fa-hand-holding-usd"></i> التحصيل والسداد</h2>
@@ -568,7 +566,7 @@
                         </div>
                         <div class="form-group"><label>💰 الخزنة *</label><select id="collectCashBox" class="inv-select"><option value="">اختر...</option></select></div>
                         <div class="form-group"><label>ملاحظات</label><input type="text" id="collectNote" /></div>
-                        <button class="btn btn-success btn-block" onclick="saveCollect()"><i class="fas fa-hand-holding-usd"></i> حفظ التحصيل</button>
+                        <button class="btn btn-success btn-block" data-permission="add" onclick="saveCollect()"><i class="fas fa-hand-holding-usd"></i> حفظ التحصيل</button>
                     </div>
                 </div>
                 <div id="payTabPay" class="pay-tab-content" style="display:none;">
@@ -586,7 +584,7 @@
                         </div>
                         <div class="form-group"><label>💰 الخزنة *</label><select id="payCashBox" class="inv-select"><option value="">اختر...</option></select></div>
                         <div class="form-group"><label>ملاحظات</label><input type="text" id="payNote" /></div>
-                        <button class="btn btn-danger btn-block" onclick="savePay()"><i class="fas fa-money-bill-wave"></i> حفظ السداد</button>
+                        <button class="btn btn-danger btn-block" data-permission="add" onclick="savePay()"><i class="fas fa-money-bill-wave"></i> حفظ السداد</button>
                     </div>
                 </div>
                 <h2 style="margin-top:20px;"><i class="fas fa-history"></i> سجل العمليات</h2>
@@ -594,7 +592,7 @@
             </div>
         </div>
 
-        <!-- ============ المرتجعات ============ -->
+        <!-- المرتجعات -->
         <div id="page-returns" class="page-container">
             <div class="page-content">
                 <h2><i class="fas fa-undo-alt"></i> المرتجعات</h2>
@@ -636,8 +634,8 @@
                         <div class="grand-value" id="retTotal">0.00 ج.م</div>
                     </div>
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px;">
-                        <button class="btn btn-primary" onclick="saveReturn()"><i class="fas fa-check"></i> حفظ</button>
-                        <button class="btn btn-info" onclick="saveReturnAndPrint()"><i class="fas fa-print"></i> حفظ وطباعة</button>
+                        <button class="btn btn-primary" data-permission="add" onclick="saveReturn()"><i class="fas fa-check"></i> حفظ</button>
+                        <button class="btn btn-info" data-permission="add" onclick="saveReturnAndPrint()"><i class="fas fa-print"></i> حفظ وطباعة</button>
                     </div>
                     <button class="btn btn-secondary btn-block" onclick="clearReturn()" style="margin-top:6px;"><i class="fas fa-times"></i> إلغاء</button>
                 </div>
@@ -646,7 +644,7 @@
             </div>
         </div>
 
-        <!-- ============ التقارير ============ -->
+        <!-- التقارير -->
         <div id="page-reports" class="page-container">
             <div class="page-content">
                 <h2><i class="fas fa-chart-bar"></i> التقارير</h2>
@@ -671,7 +669,7 @@
             </div>
         </div>
 
-        <!-- ============ المستخدمين ============ -->
+        <!-- المستخدمين -->
         <div id="page-users" class="page-container">
             <div class="page-content">
                 <h2><i class="fas fa-user-cog"></i> المستخدمين</h2>
@@ -701,7 +699,7 @@
             </div>
         </div>
 
-        <!-- ============ الإعدادات ============ -->
+        <!-- الإعدادات -->
         <div id="page-settings" class="page-container">
             <div class="page-content">
                 <h2><i class="fas fa-cog"></i> الإعدادات</h2>
@@ -739,7 +737,7 @@
             </div>
         </div>
 
-        <!-- ============ شريط التنقل السفلي ============ -->
+        <!-- شريط التنقل السفلي -->
         <nav class="bottom-nav">
             <button class="nav-item active" data-page="dashboard" onclick="navigateTo('dashboard')"><i class="fas fa-chart-pie"></i><span>الرئيسية</span></button>
             <button class="nav-item" data-page="inventory" onclick="navigateTo('inventory')"><i class="fas fa-box"></i><span>المخزون</span></button>
