@@ -187,40 +187,57 @@ console.log('🚀 تحميل app-extras.js - النسخة النظيفة');
 // 4. 📊 رسوم بيانية (SVG نظيف)
 // ═══════════════════════════════════════════════════════════
 (function initAdvancedCharts() {
-    window.drawSalesChart = function(containerId) {
-        const container = document.getElementById(containerId);
-        if (!container || typeof sales === 'undefined') return;
+   window.drawSalesChart = function(containerId) {
+    const container = document.getElementById(containerId);
+    if (!container || typeof sales === 'undefined') return;
+    
+    // ✅ عرض آخر 7 أيام فقط (أوضح للعين)
+    const days = [];
+    for (let i = 6; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        const dateStr = d.toISOString().split('T')[0];
+        const dayTotal = sales.filter(function(s) { return s.date === dateStr; })
+            .reduce(function(sum, s) { return sum + (s.total || 0); }, 0);
+        days.push({ date: dateStr, total: dayTotal });
+    }
+    
+    const maxVal = Math.max.apply(null, days.map(function(d) { return d.total; }).concat([1]));
+    
+    let svg = '<svg viewBox="0 0 280 100" preserveAspectRatio="none" style="width:100%;height:100px;">';
+    
+    // خطوط أفقية
+    for (let i = 0; i <= 4; i++) {
+        const y = 5 + (i * 22);
+        svg += '<line x1="5" y1="' + y + '" x2="275" y2="' + y + '" stroke="#2D2D2D" stroke-width="0.5" stroke-dasharray="2,2"/>';
+    }
+    
+    // نقاط البيانات
+    const points = days.map(function(d, i) {
+        const x = 15 + (i * 40); // مسافة أوضح بين النقاط
+        const y = 92 - ((d.total / maxVal) * 85);
+        return x + ',' + y;
+    }).join(' ');
+    
+    // الخط
+    svg += '<polyline points="' + points + '" fill="none" stroke="#C9A94E" stroke-width="2" stroke-linejoin="round"/>';
+    
+    // نقاط دائرية على كل نقطة
+    days.forEach(function(d, i) {
+        const x = 15 + (i * 40);
+        const y = 92 - ((d.total / maxVal) * 85);
+        const color = d.total > 0 ? '#C9A94E' : '#5D5D5D';
+        svg += '<circle cx="' + x + '" cy="' + y + '" r="3" fill="' + color + '" stroke="#0D0D0D" stroke-width="1.5"/>';
         
-        const days = [];
-        for (let i = 29; i >= 0; i--) {
-            const d = new Date();
-            d.setDate(d.getDate() - i);
-            const dateStr = d.toISOString().split('T')[0];
-            const dayTotal = sales.filter(function(s) { return s.date === dateStr; })
-                .reduce(function(sum, s) { return sum + (s.total || 0); }, 0);
-            days.push({ date: dateStr, total: dayTotal });
+        if (d.total > 0) {
+            svg += '<text x="' + x + '" y="' + (y - 8) + '" fill="#C9A94E" font-size="7" text-anchor="middle" font-weight="bold">' + d.total.toFixed(0) + '</text>';
         }
-        
-        const maxVal = Math.max.apply(null, days.map(function(d) { return d.total; }).concat([1]));
-        
-        let svg = '<svg viewBox="0 0 300 100" preserveAspectRatio="none" style="width:100%;height:100px;background:transparent;">';
-        
-        for (let i = 0; i <= 4; i++) {
-            const y = 5 + (i * 22);
-            svg += '<line x1="5" y1="' + y + '" x2="295" y2="' + y + '" stroke="#2D2D2D" stroke-width="0.5" stroke-dasharray="2,2"/>';
-        }
-        
-        const points = days.map(function(d, i) {
-            const x = 8 + (i * 9.5);
-            const y = 92 - ((d.total / maxVal) * 85);
-            return x + ',' + y;
-        }).join(' ');
-        
-        svg += '<polyline points="' + points + '" fill="none" stroke="#C9A94E" stroke-width="1.5" stroke-linejoin="round"/>';
-        svg += '</svg>';
-        
-        container.innerHTML = svg;
-    };
+    });
+    
+    svg += '</svg>';
+    
+    container.innerHTML = svg;
+};
 
     function addChartsToDashboard() {
         const pageContent = document.querySelector('#page-dashboard .page-content');
