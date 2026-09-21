@@ -101,7 +101,36 @@
     <button class="btn-danger" onclick="forceReset()">🗑️ إعادة تعيين كل البيانات</button>
 </div>
 
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+
 <script>
+// ═══════════════════════════════════════════════════════════
+// Firebase Configuration
+// ═══════════════════════════════════════════════════════════
+const firebaseConfig = {
+    apiKey: "AIzaSyCP7vpqviR6A11gPkC7cO6MQJBGKWcnVWE",
+    authDomain: "accounting-balance-ab9d3.firebaseapp.com",
+    databaseURL: "https://accounting-balance-ab9d3-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "accounting-balance-ab9d3",
+    storageBucket: "accounting-balance-ab9d3.firebasestorage.app",
+    messagingSenderId: "564321427560",
+    appId: "1:564321427560:web:170368d708c4d9dd771bdd"
+};
+
+let firebaseReady = false;
+
+try {
+    if (typeof firebase !== 'undefined' && (!firebase.apps || firebase.apps.length === 0)) {
+        firebase.initializeApp(firebaseConfig);
+        firebaseReady = true;
+        console.log('✅ Firebase جاهز');
+    }
+} catch (e) {
+    console.error('❌ خطأ Firebase:', e);
+}
+
 // سجل التشخيص
 const logEl = document.getElementById('log');
 function log(msg, color) {
@@ -186,8 +215,19 @@ function fixUsers() {
     
     try {
         localStorage.setItem('mizan_users', JSON.stringify(defaultUsers));
-        log('✅ تم حفظ ' + defaultUsers.length + ' مستخدم', '#0F0');
+        log('✅ تم حفظ ' + defaultUsers.length + ' مستخدم في localStorage', '#0F0');
         log('👑 المدير / 123456', '#0F0');
+        
+        // ✅ مزامنة مع Firebase إذا متاح
+        if (firebaseReady) {
+            firebase.database().ref('mizan/users').set(defaultUsers)
+                .then(function() {
+                    log('☁️ تم الحفظ في Firebase', '#0F0');
+                })
+                .catch(function(err) {
+                    log('⚠️ فشل Firebase: ' + err.message, '#FF0');
+                });
+        }
         
         setStatus('✅ تم إصلاح المستخدمين! جرب الدخول الآن', 'success');
         
@@ -233,6 +273,11 @@ function openMizan() {
 // تشغيل الفحص الأولي عند التحميل
 window.addEventListener('DOMContentLoaded', function() {
     log('🚀 بدء التشخيص...', '#0FF');
+    if (firebaseReady) {
+        log('☁️ Firebase متصل', '#0F0');
+    } else {
+        log('⚠️ Firebase غير متصل (سيتم الحفظ محلياً فقط)', '#FF0');
+    }
     setTimeout(checkData, 500);
 });
 </script>
