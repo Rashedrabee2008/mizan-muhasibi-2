@@ -187,11 +187,11 @@ console.log('🚀 تحميل app-extras.js - النسخة النظيفة');
 // 4. 📊 رسوم بيانية (SVG نظيف)
 // ═══════════════════════════════════════════════════════════
 (function initAdvancedCharts() {
-   window.drawSalesChart = function(containerId) {
+  window.drawSalesChart = function(containerId) {
     const container = document.getElementById(containerId);
     if (!container || typeof sales === 'undefined') return;
     
-    // ✅ عرض آخر 7 أيام فقط (أوضح للعين)
+    // ✅ آخر 7 أيام فقط
     const days = [];
     for (let i = 6; i >= 0; i--) {
         const d = new Date();
@@ -199,39 +199,56 @@ console.log('🚀 تحميل app-extras.js - النسخة النظيفة');
         const dateStr = d.toISOString().split('T')[0];
         const dayTotal = sales.filter(function(s) { return s.date === dateStr; })
             .reduce(function(sum, s) { return sum + (s.total || 0); }, 0);
-        days.push({ date: dateStr, total: dayTotal });
+        days.push({ 
+            date: dateStr, 
+            total: dayTotal,
+            dayName: ['أحد', 'إثنين', 'ثلاثاء', 'أربعاء', 'خميس', 'جمعة', 'سبت'][d.getDay()]
+        });
     }
     
     const maxVal = Math.max.apply(null, days.map(function(d) { return d.total; }).concat([1]));
     
-    let svg = '<svg viewBox="0 0 280 100" preserveAspectRatio="none" style="width:100%;height:100px;">';
+    let svg = '<svg viewBox="0 0 340 140" preserveAspectRatio="xMidYMid meet" style="width:100%;height:140px;">';
     
-    // خطوط أفقية
+    // شبكة خلفية
     for (let i = 0; i <= 4; i++) {
-        const y = 5 + (i * 22);
-        svg += '<line x1="5" y1="' + y + '" x2="275" y2="' + y + '" stroke="#2D2D2D" stroke-width="0.5" stroke-dasharray="2,2"/>';
+        const y = 15 + (i * 25);
+        svg += '<line x1="30" y1="' + y + '" x2="330" y2="' + y + '" stroke="#2D2D2D" stroke-width="0.5" stroke-dasharray="3,3"/>';
+    }
+    
+    // محور Y (القيم)
+    for (let i = 0; i <= 4; i++) {
+        const y = 15 + (i * 25);
+        const value = Math.round(maxVal * (1 - i / 4));
+        svg += '<text x="25" y="' + (y + 3) + '" fill="#5D5D5D" font-size="8" text-anchor="end">' + value + '</text>';
     }
     
     // نقاط البيانات
+    const spacing = (330 - 40) / (days.length - 1);
     const points = days.map(function(d, i) {
-        const x = 15 + (i * 40); // مسافة أوضح بين النقاط
-        const y = 92 - ((d.total / maxVal) * 85);
+        const x = 40 + (i * spacing);
+        const y = 115 - ((d.total / maxVal) * 100);
         return x + ',' + y;
     }).join(' ');
     
-    // الخط
-    svg += '<polyline points="' + points + '" fill="none" stroke="#C9A94E" stroke-width="2" stroke-linejoin="round"/>';
+    // خط الرسم
+    svg += '<polyline points="' + points + '" fill="none" stroke="#C9A94E" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>';
     
-    // نقاط دائرية على كل نقطة
+    // نقاط دائرية + قيم
     days.forEach(function(d, i) {
-        const x = 15 + (i * 40);
-        const y = 92 - ((d.total / maxVal) * 85);
-        const color = d.total > 0 ? '#C9A94E' : '#5D5D5D';
-        svg += '<circle cx="' + x + '" cy="' + y + '" r="3" fill="' + color + '" stroke="#0D0D0D" stroke-width="1.5"/>';
+        const x = 40 + (i * spacing);
+        const y = 115 - ((d.total / maxVal) * 100);
         
+        // الدائرة
         if (d.total > 0) {
-            svg += '<text x="' + x + '" y="' + (y - 8) + '" fill="#C9A94E" font-size="7" text-anchor="middle" font-weight="bold">' + d.total.toFixed(0) + '</text>';
+            svg += '<circle cx="' + x + '" cy="' + y + '" r="4" fill="#C9A94E" stroke="#0D0D0D" stroke-width="2"/>';
+            svg += '<text x="' + x + '" y="' + (y - 10) + '" fill="#C9A94E" font-size="8" text-anchor="middle" font-weight="bold">' + d.total.toFixed(0) + '</text>';
+        } else {
+            svg += '<circle cx="' + x + '" cy="' + y + '" r="3" fill="#5D5D5D" stroke="#0D0D0D" stroke-width="1.5"/>';
         }
+        
+        // اسم اليوم
+        svg += '<text x="' + x + '" y="132" fill="#A89070" font-size="9" text-anchor="middle" font-weight="bold">' + d.dayName + '</text>';
     });
     
     svg += '</svg>';
