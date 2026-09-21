@@ -20,6 +20,29 @@
 console.log('🚀 تحميل app-extras.js - النسخة النظيفة');
 
 // ═══════════════════════════════════════════════════════════
+// 🔥 إلغاء تسجيل Service Worker القديم
+// ═══════════════════════════════════════════════════════════
+(function unregisterServiceWorkers() {
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function(registrations) {
+            if (registrations.length > 0) {
+                console.log('🗑️ وجدت ' + registrations.length + ' Service Worker قديم - إلغاء...');
+                registrations.forEach(function(reg) {
+                    reg.unregister().then(function() {
+                        console.log('✅ تم إلغاء SW:', reg.scope);
+                    });
+                });
+            } else {
+                console.log('ℹ️ لا توجد Service Workers مسجلة');
+            }
+        }).catch(function(err) {
+            console.log('ℹ️ خطأ في قراءة SW:', err.message);
+        });
+    }
+})();
+
+
+// ═══════════════════════════════════════════════════════════
 // 1. 🎨 الوضع الفاتح (Light Mode)
 // ═══════════════════════════════════════════════════════════
 (function initThemeToggle() {
