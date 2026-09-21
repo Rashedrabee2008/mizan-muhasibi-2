@@ -681,3 +681,109 @@ body.light-mode .table-row { background: #FFFFFF !important; color: #1A1A1A !imp
 body.light-mode input,
 body.light-mode select { background: #FFFFFF !important; color: #1A1A1A !important; border-color: #E0D5B8 !important; }
 body.light-mode .bottom-nav { background: #FFFFFF !important; border-color: #E0D5B8 !important; }
+
+/* ═══════════════════════════════════════════════════════════
+   📊 إصلاح الرسم البياني في لوحة التحكم
+   ═══════════════════════════════════════════════════════════ */
+
+/* الحاوية الرئيسية */
+#advancedChartContainer {
+    background: #1C1C1C !important;
+    border-radius: 14px !important;
+    padding: 14px !important;
+    margin: 14px 0 !important;
+    border: 1px solid #2D2D2D !important;
+    overflow: hidden !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+/* حاوية الرسم البياني SVG */
+#salesChart30 {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+}
+
+#salesChart30 svg {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    box-sizing: border-box !important;
+}
+
+/* في التقارير - الرسم البياني */
+.report-chart {
+    overflow: hidden !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+.report-chart .chart-bars {
+    display: flex !important;
+    align-items: flex-end !important;
+    justify-content: space-around !important;
+    height: 140px !important;
+    gap: 3px !important;
+    padding: 4px 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+}
+
+.report-chart .chart-bar-wrap {
+    flex: 1 !important;
+    min-width: 0 !important;
+    max-width: 50px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 3px !important;
+    height: 100% !important;
+    justify-content: flex-end !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+}
+
+.report-chart .chart-bar {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    border-radius: 3px 3px 0 0 !important;
+}
+
+.report-chart .chart-bar-label {
+    font-size: 8px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    max-width: 100% !important;
+    text-align: center !important;
+    transform: rotate(-45deg) !important;
+    transform-origin: center !important;
+}
+
+/* الموبايل */
+@media (max-width: 480px) {
+    #advancedChartContainer {
+        padding: 10px !important;
+    }
+    
+    .report-chart {
+        padding: 10px !important;
+    }
+    
+    .report-chart .chart-bars {
+        height: 110px !important;
+        gap: 2px !important;
+    }
+    
+    .report-chart .chart-bar-label {
+        font-size: 7px !important;
+    }
+}
+
