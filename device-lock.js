@@ -11,7 +11,7 @@
         TRIAL_DAYS: 7000,
         STORAGE_KEY: 'mizan_device',
         LICENSE_KEY: 'mizan_license',
-        DEV_PHONE: '+201234567890',
+        DEV_PHONE: '+201011993799',
         DEV_EMAIL: 'dev@mizan.com',
         CHECK_INTERVAL: 120000
     };
