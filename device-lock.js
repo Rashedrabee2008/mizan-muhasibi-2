@@ -1,17 +1,20 @@
 // ============================================================
-// device-lock.js v3.0 - الحل الجذري النهائي
-// يعتمد على Firebase فقط (بدون localStorage للتحقق)
+// device-lock.js v3.1 - النسخة النهائية المُصلحة
+// يحل مشكلة Firebase Arrays + قفل الأجهزة + التنشيط اليدوي
 // ============================================================
 
 (function() {
     'use strict';
 
+    // ═══════════════════════════════════════════════════════════
+    // ⚙️ الإعدادات
+    // ═══════════════════════════════════════════════════════════
     const CONFIG = {
         MAX_DEVICES: 3,
         TRIAL_DAYS: 7000,
         STORAGE_KEY: 'mizan_device',
         LICENSE_KEY: 'mizan_license',
-        DEV_PHONE: '+201011993799',
+        DEV_PHONE: '+201234567890',
         DEV_EMAIL: 'dev@mizan.com',
         CHECK_INTERVAL: 120000
     };
@@ -66,48 +69,68 @@
     }
 
     // ═══════════════════════════════════════════════════════════
-    // 🔍 التحقق من الجهاز (Firebase فقط - لا localStorage)
+    // 🔄 تحويل Firebase Object إلى Array (الحل الأساسي)
+    // ═══════════════════════════════════════════════════════════
+    function toArray(data) {
+        if (!data) return [];
+        if (Array.isArray(data)) return data;
+        return Object.values(data).filter(item => item !== null && item !== undefined);
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // 🔍 فحص الجهاز
     // ═══════════════════════════════════════════════════════════
     async function checkDevice() {
         const deviceId = await generateDeviceId();
         window.__deviceId = deviceId;
 
-        // التحقق من Firebase
+        // انتظار Firebase
+        let attempts = 0;
+        while (!window.firebaseReady && attempts < 20) {
+            await new Promise(r => setTimeout(r, 200));
+            attempts++;
+        }
+
         if (!window.firebaseReady) {
             console.warn('⚠️ Firebase غير متصل - سيتم السماح مؤقتاً');
+            try { localStorage.setItem(CONFIG.STORAGE_KEY, deviceId); } catch(e) {}
             return { allowed: true, deviceId: deviceId, offline: true };
         }
 
         try {
             const ref = firebase.database().ref('mizan_licenses/' + CONFIG.LICENSE_KEY);
             const snapshot = await ref.once('value');
-            const data = snapshot.val() || { devices: [], maxDevices: CONFIG.MAX_DEVICES };
+            const data = snapshot.val() || {};
 
-            // ✅ تحويل الكائن إلى مصفوفة إذا لزم
-if (!data.devices) {
-    data.devices = [];
-} else if (!Array.isArray(data.devices)) {
-    // Firebase يحوّل المصفوفات إلى كائنات
-    data.devices = Object.values(data.devices);
-}
-            if (!data.maxDevices) data.maxDevices = CONFIG.MAX_DEVICES;
+            // ✅ الحل: تحويل devices من كائن إلى مصفوفة
+            const devices = toArray(data.devices);
+            const maxDevices = data.maxDevices || CONFIG.MAX_DEVICES;
+
+            console.log('📊 الأجهزة المسجلة:', devices.length, '/', maxDevices);
 
             // فحص: هل الجهاز موجود ومفعّل؟
-            const existingDevice = data.devices.find(d => d.id === deviceId);
-            
+            const existingDevice = devices.find(d => d && d.id === deviceId);
+
             if (existingDevice && existingDevice.activated) {
-                // ✅ الجهاز مفعّل - نحدّث آخر ظهور
+                // ✅ الجهاز مفعّل
                 existingDevice.lastSeen = new Date().toISOString();
-                await ref.update({ devices: data.devices });
                 
-                // نحفظ فقط بصمة الجهاز للاستخدام
+                try {
+                    await ref.update({
+                        devices: devices,
+                        maxDevices: maxDevices
+                    });
+                } catch (e) {
+                    console.warn('⚠️ فشل تحديث lastSeen:', e.message);
+                }
+                
                 try { localStorage.setItem(CONFIG.STORAGE_KEY, deviceId); } catch(e) {}
                 
                 console.log('✅ جهاز مفعّل - مرحباً');
                 return { allowed: true, deviceId: deviceId, isNew: false };
             }
 
-            // فحص إذا كان هناك جهاز مسجل مسبقاً بنفس البصمة لكن غير مفعّل
+            // جهاز مسجل لكن غير مفعّل
             if (existingDevice && !existingDevice.activated) {
                 return {
                     allowed: false,
@@ -116,17 +139,16 @@ if (!data.devices) {
                 };
             }
 
-            // جهاز جديد تماماً
             // فحص الحد الأقصى
-            const activeDevices = data.devices.filter(d => d.activated);
-            
-            if (activeDevices.length >= data.maxDevices) {
+            const activeDevices = devices.filter(d => d && d.activated);
+
+            if (activeDevices.length >= maxDevices) {
                 return {
                     allowed: false,
                     reason: 'MAX_DEVICES',
                     deviceId: deviceId,
                     currentCount: activeDevices.length,
-                    maxCount: data.maxDevices
+                    maxCount: maxDevices
                 };
             }
 
@@ -135,13 +157,12 @@ if (!data.devices) {
                 allowed: false,
                 reason: 'NEED_ACTIVATION',
                 deviceId: deviceId,
-                deviceCount: data.devices.length,
-                maxCount: data.maxDevices
+                deviceCount: devices.length,
+                maxCount: maxDevices
             };
 
         } catch (e) {
             console.error('❌ خطأ Firebase:', e);
-            // في حالة خطأ - نسمح مؤقتاً
             return { allowed: true, deviceId: deviceId, offline: true, error: e.message };
         }
     }
@@ -158,31 +179,38 @@ if (!data.devices) {
         }
 
         try {
+            // 1. فحص كود المطور الرئيسي
+            const masterCode = await getMasterCode();
+            if (code === masterCode) {
+                return { valid: true, type: 'master' };
+            }
+
+            // 2. فحص من Firebase
             const ref = firebase.database().ref('mizan_activations/' + code);
             const snapshot = await ref.once('value');
 
             if (!snapshot.exists()) {
-                // فحص كود المطور الرئيسي (لا يظهر للعامة - مشفر)
-                if (code === await getMasterCode()) {
-                    return { valid: true, type: 'master' };
-                }
                 return { valid: false, reason: 'INVALID_CODE' };
             }
 
             const data = snapshot.val();
 
+            // فحص الجهاز
             if (data.deviceId && data.deviceId !== deviceId) {
                 return { valid: false, reason: 'WRONG_DEVICE' };
             }
 
+            // فحص تاريخ الانتهاء
             if (data.expiresAt && new Date(data.expiresAt) < new Date()) {
                 return { valid: false, reason: 'EXPIRED' };
             }
 
+            // فحص عدد الاستخدامات
             if (data.maxUses && (data.uses || 0) >= data.maxUses) {
                 return { valid: false, reason: 'MAX_USES' };
             }
 
+            // تحديث عدد الاستخدامات
             if (data.maxUses) {
                 await ref.update({ uses: (data.uses || 0) + 1 });
             }
@@ -190,19 +218,19 @@ if (!data.devices) {
             return { valid: true, type: 'firebase' };
 
         } catch (e) {
+            console.error('خطأ في التحقق:', e);
             return { valid: false, reason: 'ERROR' };
         }
     }
 
-    // كود المطور (مشفر - لا يظهر بوضوح)
+    // كود المطور (مشفر)
     async function getMasterCode() {
-        // يتم فك التشفير عند الحاجة فقط
         const parts = ['TVpBTi1N', 'QVNURVIt', 'MjAyNS1T', 'RUNSRVQ='];
         return atob(parts.join(''));
     }
 
     // ═══════════════════════════════════════════════════════════
-    // ✅ تسجيل الجهاز بعد التنشيط
+    // ✅ تسجيل الجهاز
     // ═══════════════════════════════════════════════════════════
     async function registerDevice(deviceId, activationType) {
         const deviceInfo = {
@@ -222,13 +250,22 @@ if (!data.devices) {
         try {
             const ref = firebase.database().ref('mizan_licenses/' + CONFIG.LICENSE_KEY);
             const snapshot = await ref.once('value');
-            const data = snapshot.val() || { devices: [], maxDevices: CONFIG.MAX_DEVICES };
-            if (!data.devices) data.devices = [];
+            const data = snapshot.val() || {};
+            
+            // ✅ تحويل إلى مصفوفة
+            let devices = toArray(data.devices);
+            
+            // إزالة الجهاز إذا كان موجوداً
+            devices = devices.filter(d => d && d.id !== deviceId);
+            devices.push(deviceInfo);
 
-            data.devices = data.devices.filter(d => d.id !== deviceId);
-            data.devices.push(deviceInfo);
+            const maxDevices = data.maxDevices || CONFIG.MAX_DEVICES;
 
-            await ref.set(data);
+            await ref.set({
+                devices: devices,
+                maxDevices: maxDevices
+            });
+
             console.log('✅ تم تسجيل الجهاز');
 
             // إشعار للمطور
@@ -238,7 +275,8 @@ if (!data.devices) {
                     data: {
                         deviceId: deviceId,
                         deviceName: deviceInfo.name,
-                        activationType: activationType
+                        activationType: activationType,
+                        time: new Date().toISOString()
                     },
                     timestamp: new Date().toISOString(),
                     read: false
@@ -252,12 +290,12 @@ if (!data.devices) {
 
     function getDeviceName() {
         const ua = navigator.userAgent;
-        if (/android/i.test(ua)) return 'Android';
-        if (/iPad|iPhone|iPod/.test(ua)) return 'iOS';
+        if (/android/i.test(ua)) return 'Android Device';
+        if (/iPad|iPhone|iPod/.test(ua)) return 'iOS Device';
         if (/Windows/i.test(ua)) return 'Windows PC';
         if (/Macintosh/i.test(ua)) return 'Mac';
-        if (/Linux/i.test(ua)) return 'Linux';
-        return 'Unknown';
+        if (/Linux/i.test(ua)) return 'Linux PC';
+        return 'Unknown Device';
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -271,11 +309,11 @@ if (!data.devices) {
         if (reason === 'MAX_DEVICES') {
             icon = '🚫';
             title = 'تم رفض التفعيل';
-            message = 'تم الوصول للحد الأقصى من الأجهزة.';
+            message = 'تم الوصول للحد الأقصى من الأجهزة المسموح بها.';
             showInput = false;
             extraInfo = `
-                <div style="background:#0D0D0D;border-radius:12px;padding:14px;margin-bottom:20px;">
-                    <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;">
+                <div style="background:#0D0D0D;border-radius:12px;padding:14px;margin-bottom:20px;text-align:right;">
+                    <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;border-bottom:1px solid #2D2D2D;">
                         <span style="color:#A89070;">الأجهزة المسجلة:</span>
                         <strong style="color:#E06060;">${result.currentCount}</strong>
                     </div>
@@ -290,9 +328,9 @@ if (!data.devices) {
             title = 'تنشيط التطبيق مطلوب';
             message = 'أدخل كود التنشيط لتشغيل التطبيق على هذا الجهاز.';
             extraInfo = `
-                <div style="background:#0D0D0D;border-radius:12px;padding:14px;margin-bottom:20px;">
-                    <div style="font-size:11px;color:#A89070;margin-bottom:6px;">بصمة جهازك:</div>
-                    <div style="font-size:12px;color:#4A8AB5;font-family:monospace;word-break:break-all;background:#000;padding:8px;border-radius:6px;">
+                <div style="background:#0D0D0D;border-radius:12px;padding:14px;margin-bottom:20px;text-align:right;">
+                    <div style="font-size:11px;color:#A89070;margin-bottom:6px;font-weight:800;">بصمة جهازك:</div>
+                    <div style="font-size:11px;color:#4A8AB5;font-family:monospace;word-break:break-all;background:#000;padding:8px;border-radius:6px;line-height:1.4;">
                         ${result.deviceId}
                     </div>
                     <button onclick="window.__copyDeviceId()" style="
@@ -300,7 +338,7 @@ if (!data.devices) {
                         background:#4A8AB5;border:none;color:#fff;
                         border-radius:6px;font-size:11px;cursor:pointer;
                         font-family:inherit;font-weight:800;
-                    ">📋 نسخ البصمة</button>
+                    ">📋 نسخ البصمة الكاملة</button>
                 </div>
             `;
         }
@@ -335,14 +373,14 @@ if (!data.devices) {
                                 style="
                                     width:100%;padding:14px;border-radius:10px;
                                     border:2px solid #3D3D3D;background:#0D0D0D;
-                                    color:#F5E6C8;font-size:14px;
+                                    color:#F5E6C8;font-size:13px;
                                     font-family:monospace;text-align:center;
                                     letter-spacing:1px;font-weight:900;
                                     box-sizing:border-box;
                                 " />
                             <div id="activationError" style="
                                 color:#E06060;font-size:12px;margin-top:8px;
-                                display:none;font-weight:800;
+                                display:none;font-weight:800;text-align:center;
                             "></div>
                         </div>
                         <button onclick="window.__tryActivate()" style="
@@ -366,20 +404,21 @@ if (!data.devices) {
             </div>
         `;
 
-        // الدوال
+        // نسخ البصمة
         window.__copyDeviceId = function() {
             const id = result.deviceId;
-            if (navigator.clipboard) {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
                 navigator.clipboard.writeText(id).then(() => {
-                    alert('✅ تم نسخ البصمة:\n\n' + id);
+                    alert('✅ تم نسخ البصمة الكاملة:\n\n' + id);
                 }).catch(() => {
-                    prompt('انسخ البصمة:', id);
+                    prompt('انسخ البصمة يدوياً:', id);
                 });
             } else {
-                prompt('انسخ البصمة:', id);
+                prompt('انسخ البصمة يدوياً:', id);
             }
         };
 
+        // محاولة التنشيط
         window.__tryActivate = async function() {
             const input = document.getElementById('activationCodeInput');
             const errorEl = document.getElementById('activationError');
@@ -387,6 +426,7 @@ if (!data.devices) {
 
             if (!code) {
                 errorEl.textContent = '⚠️ أدخل كود التنشيط';
+                errorEl.style.color = '#E06060';
                 errorEl.style.display = 'block';
                 return;
             }
@@ -410,9 +450,9 @@ if (!data.devices) {
                 const msgs = {
                     'INVALID_CODE': '❌ كود غير صحيح',
                     'EXPIRED': '⏰ الكود منتهي',
-                    'MAX_USES': '🚫 تم استخدام الكود',
-                    'WRONG_DEVICE': '⚠️ الكود لجهاز آخر',
-                    'NO_INTERNET': '⚠️ لا يوجد اتصال',
+                    'MAX_USES': '🚫 تم استخدام الكود بالحد الأقصى',
+                    'WRONG_DEVICE': '⚠️ الكود مخصص لجهاز آخر',
+                    'NO_INTERNET': '⚠️ لا يوجد اتصال بالإنترنت',
                     'ERROR': '⚠️ خطأ في التحقق'
                 };
                 errorEl.textContent = msgs[validation.reason] || '❌ كود غير صحيح';
@@ -421,6 +461,7 @@ if (!data.devices) {
             }
         };
 
+        // تركيز تلقائي
         setTimeout(() => {
             const input = document.getElementById('activationCodeInput');
             if (input) {
@@ -433,17 +474,10 @@ if (!data.devices) {
     }
 
     // ═══════════════════════════════════════════════════════════
-    // 🚀 التشغيل
+    // 🚀 التشغيل الرئيسي
     // ═══════════════════════════════════════════════════════════
     async function initDeviceLock() {
         console.log('🔐 فحص الجهاز...');
-
-        // انتظار Firebase
-        let attempts = 0;
-        while (!window.firebaseReady && attempts < 20) {
-            await new Promise(r => setTimeout(r, 200));
-            attempts++;
-        }
 
         const result = await checkDevice();
         console.log('📋 النتيجة:', result);
@@ -453,47 +487,80 @@ if (!data.devices) {
             return false;
         }
 
-        console.log('✅ الجهاز مسموح');
+        console.log('✅ الجهاز مسموح - التطبيق جاهز');
         return true;
     }
 
-    // دوال للمطور
+    // ═══════════════════════════════════════════════════════════
+    // 🛠️ دوال المطور
+    // ═══════════════════════════════════════════════════════════
+
+    // توليد كود لجهاز معين
     window.devGenerateCode = async function(deviceId) {
         if (!deviceId) return null;
         const deviceShort = deviceId.substring(0, 8).toUpperCase();
-        const combined = deviceId + await getMasterCode();
+        const masterCode = await getMasterCode();
+        const combined = deviceId + masterCode;
         const hash = await sha256(combined);
         const codeHash = hash.substring(0, 12).toUpperCase();
         return 'MIZAN-' + deviceShort.substring(0, 4) + '-' + 
                codeHash.substring(0, 4) + '-' + codeHash.substring(4, 8);
     };
 
+    // عرض الأجهزة المسجلة
     window.devShowDevices = async function() {
-        if (!window.firebaseReady) { alert('Firebase غير متصل'); return; }
+        if (!window.firebaseReady) { alert('⚠️ Firebase غير متصل'); return; }
         try {
             const ref = firebase.database().ref('mizan_licenses/' + CONFIG.LICENSE_KEY);
             const snapshot = await ref.once('value');
-            const data = snapshot.val() || { devices: [] };
-            const devices = data.devices || [];
+            const data = snapshot.val() || {};
+            const devices = toArray(data.devices);
             
             let msg = `📱 الأجهزة المسجلة (${devices.length}/${data.maxDevices || CONFIG.MAX_DEVICES}):\n\n`;
-            devices.forEach((d, i) => {
-                msg += `${i+1}. ${d.name} ${d.activated ? '✅' : '⏳'}\n`;
-                msg += `   ID: ${d.id.substring(0, 16)}...\n\n`;
-            });
+            if (devices.length === 0) {
+                msg += 'لا توجد أجهزة مسجلة';
+            } else {
+                devices.forEach((d, i) => {
+                    msg += `${i+1}. ${d.name || 'جهاز'} ${d.activated ? '✅' : '⏳'}\n`;
+                    msg += `   ID: ${(d.id || '').substring(0, 16)}...\n`;
+                    msg += `   التاريخ: ${new Date(d.registeredAt).toLocaleDateString('ar-EG')}\n\n`;
+                });
+            }
             alert(msg);
         } catch (e) {
-            alert('خطأ: ' + e.message);
+            alert('❌ خطأ: ' + e.message);
+        }
+    };
+
+    // حذف جهاز
+    window.devRemoveDevice = async function(deviceId) {
+        if (!confirm('⚠️ حذف هذا الجهاز؟')) return;
+        try {
+            const ref = firebase.database().ref('mizan_licenses/' + CONFIG.LICENSE_KEY);
+            const snapshot = await ref.once('value');
+            const data = snapshot.val() || {};
+            let devices = toArray(data.devices);
+            devices = devices.filter(d => d && d.id !== deviceId);
+            
+            await ref.set({
+                devices: devices,
+                maxDevices: data.maxDevices || CONFIG.MAX_DEVICES
+            });
+            
+            alert('✅ تم حذف الجهاز');
+        } catch (e) {
+            alert('❌ خطأ: ' + e.message);
         }
     };
 
     window.initDeviceLock = initDeviceLock;
 
+    // بدء التشغيل
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', () => setTimeout(initDeviceLock, 500));
     } else {
         setTimeout(initDeviceLock, 500);
     }
 
-    console.log('✅ device-lock.js v3.0 جاهز');
+    console.log('✅ device-lock.js v3.1 - جاهز');
 })();
