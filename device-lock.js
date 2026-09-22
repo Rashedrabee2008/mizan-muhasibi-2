@@ -83,7 +83,13 @@
             const snapshot = await ref.once('value');
             const data = snapshot.val() || { devices: [], maxDevices: CONFIG.MAX_DEVICES };
 
-            if (!data.devices) data.devices = [];
+            // ✅ تحويل الكائن إلى مصفوفة إذا لزم
+if (!data.devices) {
+    data.devices = [];
+} else if (!Array.isArray(data.devices)) {
+    // Firebase يحوّل المصفوفات إلى كائنات
+    data.devices = Object.values(data.devices);
+}
             if (!data.maxDevices) data.maxDevices = CONFIG.MAX_DEVICES;
 
             // فحص: هل الجهاز موجود ومفعّل؟
