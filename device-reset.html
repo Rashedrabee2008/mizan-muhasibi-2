@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تفعيل الميزان</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Tajawal', Arial, sans-serif; }
+        body {
+            background: #0D0D0D;
+            color: #F5E6C8;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .box {
+            max-width: 450px;
+            width: 100%;
+            background: #1C1C1C;
+            border-radius: 20px;
+            padding: 30px 24px;
+            border: 2px solid #C9A94E;
+            box-shadow: 0 20px 50px rgba(201, 169, 78, 0.3);
+            text-align: center;
+        }
+        .icon { font-size: 60px; margin-bottom: 16px; }
+        h1 { color: #C9A94E; font-size: 22px; margin-bottom: 12px; font-weight: 900; }
+        p { color: #F5E6C8; font-size: 14px; line-height: 1.8; margin-bottom: 20px; }
+        .info {
+            background: #0D0D0D;
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 16px;
+            font-size: 12px;
+            color: #A89070;
+            text-align: center;
+        }
+        .info strong { color: #C9A94E; }
+        .device-id {
+            background: #0D0D0D;
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 16px;
+            font-family: monospace;
+            font-size: 12px;
+            color: #4A8AB5;
+            font-weight: 800;
+            word-break: break-all;
+        }
+        input {
+            width: 100%;
+            padding: 14px;
+            border-radius: 10px;
+            border: 2px solid #3D3D3D;
+            background: #0D0D0D;
+            color: #F5E6C8;
+            font-size: 14px;
+            text-align: center;
+            box-sizing: border-box;
+            font-family: monospace;
+            font-weight: 800;
+            letter-spacing: 2px;
+            margin-bottom: 12px;
+            outline: none;
+        }
+        input:focus { border-color: #C9A94E; }
+        button {
+            width: 100%;
+            padding: 14px;
+            border-radius: 10px;
+            border: none;
+            font-size: 15px;
+            font-weight: 900;
+            cursor: pointer;
+            font-family: inherit;
+            margin-bottom: 8px;
+        }
+        .btn-green { background: linear-gradient(135deg, #2D8F5E, #1A7A4A); color: #fff; }
+        .btn-blue { background: linear-gradient(135deg, #4A8AB5, #3A7AA5); color: #fff; }
+        .btn-red { background: linear-gradient(135deg, #E06060, #C04040); color: #fff; }
+        .msg {
+            font-size: 12px;
+            min-height: 20px;
+            margin-bottom: 12px;
+            font-weight: 800;
+        }
+    </style>
+</head>
+<body>
+
+<div class="box">
+    <div class="icon">🔐</div>
+    <h1>تفعيل الميزان</h1>
+    <p>أدخل كود التنشيط لتفعيل التطبيق على هذا الجهاز</p>
+    
+    <div class="info">
+        <strong>💡 كود التفعيل:</strong> MIZAN-2025
+    </div>
+    
+    <div class="device-id" id="deviceId">جاري التحميل...</div>
+    
+    <input type="text" id="codeInput" placeholder="أدخل الكود" autocomplete="off" />
+    
+    <div class="msg" id="msg"></div>
+    
+    <button class="btn-green" onclick="activate()">✅ تفعيل</button>
+    <button class="btn-blue" onclick="copyDeviceId()">📋 نسخ بصمة الجهاز</button>
+    <button class="btn-red" onclick="reset()">🗑️ إعادة تعيين</button>
+    
+    <div class="info" style="margin-top: 20px; text-align: center;">
+        <strong>📞 للتواصل:</strong> +201234567890
+    </div>
+</div>
+
+<script>
+    // الحصول على بصمة الجهاز
+    function getDeviceId() {
+        try {
+            let id = localStorage.getItem('mizan_device_id');
+            if (id) return id;
+            
+            const data = [
+                navigator.userAgent,
+                navigator.language,
+                screen.width + 'x' + screen.height,
+                new Date().getTimezoneOffset()
+            ].join('|');
+            
+            let hash = 0;
+            for (let i = 0; i < data.length; i++) {
+                const char = data.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash = hash & hash;
+            }
+            id = 'dev-' + Math.abs(hash).toString(36);
+            
+            localStorage.setItem('mizan_device_id', id);
+            return id;
+        } catch (e) {
+            return 'temp-' + Date.now();
+        }
+    }
+
+    const deviceId = getDeviceId();
+    document.getElementById('deviceId').textContent = deviceId;
+
+    function activate() {
+        const code = document.getElementById('codeInput').value.trim().toUpperCase();
+        const msg = document.getElementById('msg');
+        
+        if (!code) {
+            msg.style.color = '#E06060';
+            msg.textContent = '⚠️ أدخل الكود';
+            return;
+        }
+        
+        if (code === 'MIZAN-2025' || code === 'MIZAN-MASTER-2025-SECRET') {
+            localStorage.setItem('mizan_activated', 'yes');
+            msg.style.color = '#2D8F5E';
+            msg.textContent = '✅ تم التفعيل! جاري التحويل...';
+            
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 1000);
+        } else {
+            msg.style.color = '#E06060';
+            msg.textContent = '❌ كود غير صحيح';
+            document.getElementById('codeInput').value = '';
+        }
+    }
+
+    function copyDeviceId() {
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(deviceId).then(() => {
+                alert('✅ تم نسخ البصمة:\n' + deviceId);
+            }).catch(() => {
+                prompt('انسخ البصمة:', deviceId);
+            });
+        } else {
+            prompt('انسخ البصمة:', deviceId);
+        }
+    }
+
+    function reset() {
+        if (confirm('⚠️ سيتم مسح بيانات التفعيل. متابعة؟')) {
+            localStorage.removeItem('mizan_activated');
+            localStorage.removeItem('mizan_device_id');
+            alert('✅ تم إعادة التعيين');
+            location.reload();
+        }
+    }
+
+    // Enter
+    document.getElementById('codeInput').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') activate();
+    });
+</script>
+
+</body>
+</html>
