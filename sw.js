@@ -1,8 +1,8 @@
 // ============================================================
-// Service Worker - الميزان
+// Service Worker - الميزان v15
 // ============================================================
 
-const CACHE_NAME = 'mizan-v15';
+const CACHE_NAME = 'mizan-v15-' + Date.now();
 const URLS_TO_CACHE = [
     './',
     './index.html',
@@ -13,26 +13,26 @@ const URLS_TO_CACHE = [
     './icon.png'
 ];
 
-// تثبيت
+// ═══ تثبيت ═══
 self.addEventListener('install', (event) => {
     console.log('🔧 SW: تثبيت');
     self.skipWaiting();
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
-            return cache.addAll(URLS_TO_CACHE).catch(err => {
-                console.warn('⚠️ SW: بعض الملفات فشلت:', err);
-            });
+            return cache.addAll(URLS_TO_CACHE.map(url => 
+                new Request(url, { mode: 'no-cors' })
+            )).catch(err => console.warn('⚠️ SW:', err));
         })
     );
 });
 
-// تنشيط
+// ═══ تنشيط ═══
 self.addEventListener('activate', (event) => {
     console.log('✅ SW: تنشيط');
     event.waitUntil(
-        caches.keys().then((cacheNames) => {
+        caches.keys().then((names) => {
             return Promise.all(
-                cacheNames.map((name) => {
+                names.map((name) => {
                     if (name !== CACHE_NAME) {
                         return caches.delete(name);
                     }
@@ -43,9 +43,8 @@ self.addEventListener('activate', (event) => {
     return self.clients.claim();
 });
 
-// جلب البيانات
+// ═══ جلب ═══
 self.addEventListener('fetch', (event) => {
-    // تجاهل طلبات Firebase
     if (event.request.url.includes('firebase') || 
         event.request.url.includes('googleapis') ||
         event.request.url.includes('gstatic')) {
@@ -57,15 +56,10 @@ self.addEventListener('fetch', (event) => {
             if (response) return response;
             
             return fetch(event.request).then((res) => {
-                if (!res || res.status !== 200 || res.type !== 'basic') {
-                    return res;
-                }
+                if (!res || res.status !== 200 || res.type !== 'basic') return res;
                 
                 const resClone = res.clone();
-                caches.open(CACHE_NAME).then((cache) => {
-                    cache.put(event.request, resClone);
-                });
-                
+                caches.open(CACHE_NAME).then((cache) => cache.put(event.request, resClone));
                 return res;
             }).catch(() => {
                 if (event.request.destination === 'document') {
@@ -73,6 +67,29 @@ self.addEventListener('fetch', (event) => {
                 }
             });
         })
+    );
+});
+
+// ═══ إشعارات Push ═══
+self.addEventListener('push', (event) => {
+    const data = event.data ? event.data.json() : {};
+    const title = data.title || 'الميزان';
+    const options = {
+        body: data.body || 'لديك إشعار جديد',
+        icon: './icon.png',
+        badge: './icon.png',
+        vibrate: [200, 100, 200],
+        data: data.data || {},
+        actions: data.actions || []
+    };
+    event.waitUntil(self.registration.showNotification(title, options));
+});
+
+// ═══ نقر على الإشعار ═══
+self.addEventListener('notificationclick', (event) => {
+    event.notification.close();
+    event.waitUntil(
+        clients.openWindow('./')
     );
 });
 
