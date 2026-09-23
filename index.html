@@ -18,6 +18,13 @@
     <link rel="stylesheet" href="style.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet" />
+    <!-- PWA Manifest -->
+<link rel="manifest" href="manifest.json" />
+<meta name="theme-color" content="#0D0D0D" />
+<link rel="apple-touch-icon" href="icon.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="الميزان" />
 </head>
 <body>
 
@@ -803,6 +810,45 @@
     <script src="app.js"></script>
 <script src="app-extras.js"></script>
 <script src="dev-panel.js"></script>
+
+    <!-- تسجيل Service Worker -->
+<script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./sw.js')
+                .then(reg => console.log('✅ SW مسجل:', reg.scope))
+                .catch(err => console.warn('⚠️ SW فشل:', err.message));
+        });
+    }
+
+    // زر التثبيت
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        
+        // إظهار زر التثبيت
+        setTimeout(() => {
+            if (typeof showToast === 'function') {
+                showToast('📱 يمكنك تثبيت التطبيق! اضغط على قائمة المتصفح', 'info');
+            }
+        }, 5000);
+    });
+
+    // زر تثبيت يدوي
+    window.installPWA = async function() {
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            if (outcome === 'accepted') {
+                showToast('✅ تم تثبيت التطبيق!', 'success');
+            }
+            deferredPrompt = null;
+        } else {
+            alert('📱 لتثبيت التطبيق:\n\n1. افتح قائمة المتصفح\n2. اختر "إضافة إلى الشاشة الرئيسية"');
+        }
+    };
+</script>
 
 </body>
 </html>
