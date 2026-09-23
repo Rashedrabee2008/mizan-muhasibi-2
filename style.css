@@ -1005,3 +1005,266 @@ body.light-mode .bottom-nav { background: #FFFFFF !important; border-color: #E0D
         grid-template-columns: 1fr 1fr !important;
     }
 }
+
+/* ============================================================
+   🎨 تنسيق محسّن للحسابات والموبايل
+   ============================================================ */
+
+/* ═══ إحصائيات الحسابات - عمودين على الموبايل ═══ */
+#page-accounts .dashboard-stats {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+}
+
+#page-accounts .dashboard-card {
+    padding: 12px 8px !important;
+}
+
+#page-accounts .dashboard-card .number {
+    font-size: 16px !important;
+}
+
+#page-accounts .dashboard-card .label {
+    font-size: 10px !important;
+}
+
+/* ═══ أزرار التقارير الثلاثة ═══ */
+#page-accounts button[onclick*="showTrialBalance"],
+#page-accounts button[onclick*="showIncomeStatement"],
+#page-accounts button[onclick*="showBalanceSheet"] {
+    font-size: 10px !important;
+    padding: 10px 4px !important;
+    min-height: 60px !important;
+    flex-direction: column !important;
+    gap: 4px !important;
+    line-height: 1.2 !important;
+}
+
+#page-accounts button[onclick*="showTrialBalance"] i,
+#page-accounts button[onclick*="showIncomeStatement"] i,
+#page-accounts button[onclick*="showBalanceSheet"] i {
+    font-size: 18px !important;
+    margin-bottom: 4px !important;
+}
+
+/* ═══ نموذج إضافة حساب - محسّن ═══ */
+#page-accounts .form-card {
+    padding: 12px !important;
+}
+
+#page-accounts .form-card h3 {
+    font-size: 14px !important;
+    padding-bottom: 8px !important;
+    margin-bottom: 10px !important;
+}
+
+#page-accounts .form-group {
+    margin-bottom: 8px !important;
+}
+
+#page-accounts .form-group label {
+    font-size: 11px !important;
+    margin-bottom: 4px !important;
+}
+
+#page-accounts .form-group input,
+#page-accounts .form-group select {
+    padding: 10px !important;
+    font-size: 13px !important;
+}
+
+#page-accounts .form-actions {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    margin-top: 10px !important;
+}
+
+#page-accounts .form-actions .btn {
+    font-size: 12px !important;
+    padding: 10px 8px !important;
+    min-height: 42px !important;
+}
+
+/* ═══ فلترة الحسابات - مضغوطة ═══ */
+#page-accounts .filter-chips {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 5px !important;
+    margin-bottom: 12px !important;
+}
+
+#page-accounts .filter-chip {
+    padding: 8px 4px !important;
+    font-size: 10px !important;
+    text-align: center !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+/* ═══ دليل الحسابات - بطاقات أفضل ═══ */
+#accountList .table-header,
+#accountList .table-row {
+    grid-template-columns: 0.7fr 1.5fr 0.9fr 1fr auto !important;
+    font-size: 11px !important;
+    padding: 8px 6px !important;
+    gap: 4px !important;
+}
+
+#accountList .table-row strong {
+    font-size: 12px !important;
+    color: #F5E6C8 !important;
+}
+
+#accountList .table-row .btn-sm {
+    min-width: 30px !important;
+    padding: 4px 6px !important;
+    font-size: 10px !important;
+}
+
+/* ═══ القيود اليومية - تنسيق أفضل ═══ */
+#journalList .cash-box-card {
+    padding: 12px !important;
+    margin-bottom: 8px !important;
+}
+
+#journalList .cash-box-card > div:first-child {
+    padding-bottom: 8px !important;
+    border-bottom: 1px dashed #2D2D2D !important;
+    margin-bottom: 8px !important;
+}
+
+/* ═══ عنوان قسم الحسابات - أنيق ═══ */
+#page-accounts .page-content > h2 {
+    font-size: 20px !important;
+    padding-bottom: 10px !important;
+    border-bottom: 2px dashed #2D2D2D !important;
+    margin-bottom: 14px !important;
+}
+
+/* ═══ أزرار القيود والنوافذ المنبثقة ═══ */
+#journalList + div .btn,
+#page-accounts h3 + div {
+    margin-top: 10px;
+}
+
+/* ═══ موبايل صغير جداً ═══ */
+@media (max-width: 380px) {
+    #page-accounts .dashboard-stats {
+        grid-template-columns: 1fr !important;
+    }
+    
+    #page-accounts .filter-chips {
+        grid-template-columns: 1fr 1fr !important;
+    }
+    
+    #accountList .table-header,
+    #accountList .table-row {
+        grid-template-columns: 1fr !important;
+        padding: 10px !important;
+    }
+    
+    #accountList .table-header {
+        display: none !important;
+    }
+    
+    #accountList .table-row > span {
+        display: flex !important;
+        justify-content: space-between !important;
+        padding: 4px 0 !important;
+        border-bottom: 1px solid #1A1A1A !important;
+    }
+}
+
+/* ═══ كمبيوتر - تنسيق موسّع ═══ */
+@media (min-width: 768px) {
+    #page-accounts .dashboard-stats {
+        grid-template-columns: repeat(5, 1fr) !important;
+    }
+    
+    #page-accounts .filter-chips {
+        display: flex !important;
+        flex-wrap: wrap !important;
+    }
+    
+    #page-accounts .filter-chip {
+        padding: 6px 14px !important;
+        font-size: 12px !important;
+    }
+}
+
+/* ═══ تحسينات عامة للقسم ═══ */
+#page-accounts .stat-mini {
+    background: linear-gradient(135deg, #0D0D0D, #1A1A1A) !important;
+    border-radius: 12px !important;
+    padding: 12px 8px !important;
+}
+
+/* ═══ تحسين الأزرار في الموبايل ═══ */
+@media (max-width: 480px) {
+    /* قسم الحسابات في "المزيد" */
+    #moreMenu .more-item {
+        font-size: 11px !important;
+        padding: 10px 4px !important;
+    }
+    
+    #moreMenu .more-item i {
+        font-size: 18px !important;
+    }
+    
+    /* عناوين الحسابات */
+    #page-accounts h3 {
+        font-size: 13px !important;
+    }
+    
+    /* القيود اليومية */
+    #journalList .cash-box-card {
+        padding: 10px !important;
+    }
+    
+    #journalList .cash-box-card > div:nth-child(2) {
+        font-size: 12px !important;
+    }
+}
+
+/* ═══ تحسين عام للتنسيق ═══ */
+.page-content > h2 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-bottom: 12px;
+    border-bottom: 2px dashed #2D2D2D;
+    margin-bottom: 14px;
+}
+
+.page-content > h2 i {
+    font-size: 22px;
+    color: #C9A94E;
+}
+
+/* ═══ تحسين عرض الحسابات - شكل جدول أفضل ═══ */
+.account-row-code {
+    font-family: 'Courier New', monospace !important;
+    font-weight: 900 !important;
+    color: #C9A94E !important;
+    background: #0D0D0D !important;
+    padding: 2px 6px !important;
+    border-radius: 4px !important;
+    display: inline-block !important;
+}
+
+/* ═══ تمييز الأرصدة ═══ */
+.account-balance-positive {
+    color: #2D8F5E !important;
+    font-weight: 900 !important;
+}
+
+.account-balance-negative {
+    color: #E06060 !important;
+    font-weight: 900 !important;
+}
+
+.account-balance-zero {
+    color: #5D5D5D !important;
+}
