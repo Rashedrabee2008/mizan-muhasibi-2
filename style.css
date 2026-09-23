@@ -787,3 +787,154 @@ body.light-mode .bottom-nav { background: #FFFFFF !important; border-color: #E0D
     }
 }
 
+/* ============================================================
+   📱 التنسيق التلقائي للموبايل - إخفاء العناصر الزائدة
+   ============================================================ */
+
+/* ═══ الموبايل (أقل من 480px) ═══ */
+@media (max-width: 480px) {
+
+    /* 1. إخفاء زر اللغة على الموبايل */
+    #langToggleBtn {
+        display: none !important;
+    }
+
+    /* 2. تصغير الساعة */
+    .top-header .header-actions .clock {
+        font-size: 9px !important;
+        max-width: 60px !important;
+        padding: 0 4px !important;
+    }
+
+    /* 3. إخفاء اسم المستخدم (إظهار الأيقونة فقط) */
+    .top-header .user-badge span {
+        display: none !important;
+    }
+
+    /* 4. الأزرار العلوية - صغيرة */
+    .top-header .header-actions > * {
+        height: 26px !important;
+        min-width: 26px !important;
+        padding: 0 4px !important;
+        font-size: 10px !important;
+    }
+
+    /* 5. الهيدر كامل - مضغوط */
+    .top-header {
+        padding: 8px 10px !important;
+        gap: 5px !important;
+    }
+
+    /* 6. الشعار - صغير */
+    .top-header .logo-icon {
+        font-size: 18px !important;
+        width: 28px !important;
+        height: 28px !important;
+    }
+
+    /* 7. اسم الشركة - صغير */
+    .top-header .header-text h1 {
+        font-size: 15px !important;
+    }
+
+    .top-header .header-text .sub-title {
+        font-size: 9px !important;
+    }
+
+    /* 8. زر القفل - مخفي على الموبايل (تسجيل الخروج متاح في الإعدادات) */
+    .top-header .lock-btn {
+        display: none !important;
+    }
+
+    /* 9. لوحة المطور - تكييف */
+    .dev-tab-btn {
+        font-size: 11px !important;
+        padding: 10px 6px !important;
+    }
+
+    /* 10. النوافذ المنبثقة */
+    .modal-box {
+        max-width: 95% !important;
+        padding: 16px !important;
+    }
+
+    /* 11. الأزرار */
+    .btn {
+        font-size: 12px !important;
+        padding: 10px 14px !important;
+        min-height: 40px !important;
+    }
+
+    /* 12. لوحة التحكم */
+    .dashboard-card .number {
+        font-size: 18px !important;
+    }
+    
+    .dashboard-card .label {
+        font-size: 10px !important;
+    }
+
+    /* 13. الرسم البياني */
+    #advancedChartContainer {
+        padding: 10px !important;
+    }
+
+    /* 14. إخفاء المسافة الزائدة */
+    .top-header .header-actions {
+        gap: 2px !important;
+    }
+}
+
+/* ═══ الموبايل الصغير جداً (أقل من 360px) ═══ */
+@media (max-width: 360px) {
+    #langToggleBtn,
+    #themeToggleBtn {
+        display: none !important;
+    }
+
+    .top-header .clock {
+        display: none !important;
+    }
+}
+
+/* ═══ الكمبيوتر (أكبر من 768px) ═══ */
+@media (min-width: 768px) {
+    body {
+        padding: 20px 40px 100px !important;
+    }
+
+    .top-header {
+        padding: 12px 20px !important;
+    }
+
+    .top-header .header-text h1 {
+        font-size: 22px !important;
+    }
+
+    .top-header .header-text .sub-title {
+        font-size: 12px !important;
+    }
+
+    /* إظهار اسم المستخدم كاملاً */
+    .top-header .user-badge span {
+        display: inline !important;
+        margin-right: 4px;
+    }
+
+    /* تكبير أزرار الهيدر */
+    .top-header .header-actions > * {
+        height: 34px !important;
+        min-width: 34px !important;
+        font-size: 13px !important;
+    }
+
+    /* لوحة التحكم - 4 أعمدة */
+    .dashboard-stats {
+        grid-template-columns: repeat(4, 1fr) !important;
+    }
+
+    /* النموذج - عمودين */
+    .form-row {
+        grid-template-columns: 1fr 1fr !important;
+    }
+}
