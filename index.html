@@ -13,22 +13,18 @@
     
     <title>الميزان - نظام محاسبة</title>
     
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json" />
+    <link rel="apple-touch-icon" href="icon.png" />
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚖️</text></svg>" />
     
     <link rel="stylesheet" href="style.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet" />
-    <!-- PWA Manifest -->
-<link rel="manifest" href="manifest.json" />
-<meta name="theme-color" content="#0D0D0D" />
-<link rel="apple-touch-icon" href="icon.png" />
-<meta name="apple-mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-<meta name="apple-mobile-web-app-title" content="الميزان" />
 </head>
 <body>
 
-    <!-- شاشة تسجيل الدخول -->
+    <!-- ============ شاشة تسجيل الدخول ============ -->
     <div id="loginContainer" class="login-container">
         <div class="login-box">
             <div class="logo"><i class="fas fa-scale-balanced"></i></div>
@@ -79,7 +75,7 @@
             </div>
         </header>
 
-        <!-- لوحة التحكم -->
+        <!-- ============ لوحة التحكم ============ -->
         <div id="page-dashboard" class="page-container active">
             <div class="page-content">
                 <h2><i class="fas fa-chart-pie"></i> لوحة التحكم</h2>
@@ -106,7 +102,7 @@
             </div>
         </div>
 
-        <!-- المخزون -->
+        <!-- ============ المخزون ============ -->
         <div id="page-inventory" class="page-container">
             <div class="page-content">
                 <h2><i class="fas fa-box"></i> المخزون</h2>
@@ -135,7 +131,7 @@
             </div>
         </div>
 
-        <!-- الكاشير -->
+        <!-- ============ الكاشير ============ -->
         <div id="page-cashier" class="page-container">
             <div class="page-content">
                 <h2><i class="fas fa-cash-register"></i> الكاشير</h2>
@@ -287,7 +283,7 @@
             </div>
         </div>
 
-        <!-- المشتريات -->
+        <!-- ============ المشتريات ============ -->
         <div id="page-purchases" class="page-container">
             <div class="page-content">
                 <h2><i class="fas fa-shopping-cart"></i> المشتريات</h2>
@@ -343,7 +339,7 @@
             </div>
         </div>
 
-        <!-- العملاء -->
+        <!-- ============ العملاء ============ -->
         <div id="page-customers" class="page-container">
             <div class="page-content">
                 <h2><i class="fas fa-users"></i> العملاء</h2>
@@ -368,7 +364,7 @@
             </div>
         </div>
 
-        <!-- الموردين -->
+        <!-- ============ الموردين ============ -->
         <div id="page-suppliers" class="page-container">
             <div class="page-content">
                 <h2><i class="fas fa-truck"></i> الموردين</h2>
@@ -393,7 +389,7 @@
             </div>
         </div>
 
-        <!-- الخزائن -->
+        <!-- ============ الخزائن ============ -->
         <div id="page-cash-boxes" class="page-container">
             <div class="page-content">
                 <h2><i class="fas fa-money-bill-wave"></i> الخزائن</h2>
@@ -445,7 +441,7 @@
             </div>
         </div>
 
-        <!-- المصروفات -->
+        <!-- ============ المصروفات ============ -->
         <div id="page-expenses" class="page-container">
             <div class="page-content">
                 <h2><i class="fas fa-money-bill-wave"></i> المصروفات</h2>
@@ -484,7 +480,7 @@
             </div>
         </div>
 
-        <!-- حركات الخزنة -->
+        <!-- ============ حركات الخزنة ============ -->
         <div id="page-treasury" class="page-container">
             <div class="page-content">
                 <h2><i class="fas fa-vault"></i> حركات الخزنة</h2>
@@ -525,7 +521,7 @@
             </div>
         </div>
 
-        <!-- الفواتير -->
+        <!-- ============ الفواتير ============ -->
         <div id="page-invoices" class="page-container">
             <div class="page-content">
                 <h2><i class="fas fa-file-invoice"></i> فواتير البيع</h2>
@@ -546,7 +542,7 @@
             </div>
         </div>
 
-        <!-- التحصيل والسداد -->
+        <!-- ============ التحصيل والسداد ============ -->
         <div id="page-payments" class="page-container">
             <div class="page-content">
                 <h2><i class="fas fa-hand-holding-usd"></i> التحصيل والسداد</h2>
@@ -599,7 +595,7 @@
             </div>
         </div>
 
-        <!-- المرتجعات -->
+        <!-- ============ المرتجعات ============ -->
         <div id="page-returns" class="page-container">
             <div class="page-content">
                 <h2><i class="fas fa-undo-alt"></i> المرتجعات</h2>
@@ -651,7 +647,123 @@
             </div>
         </div>
 
-        <!-- التقارير -->
+        <!-- ============ الحسابات ============ -->
+        <div id="page-accounts" class="page-container">
+            <div class="page-content">
+                <h2><i class="fas fa-book"></i> الحسابات</h2>
+
+                <div class="dashboard-stats">
+                    <div class="dashboard-card" style="border-right-color:#2D8F5E;">
+                        <div class="number" id="accAssets" style="color:#2D8F5E;">0.00</div>
+                        <div class="label">💎 الأصول</div>
+                    </div>
+                    <div class="dashboard-card" style="border-right-color:#E06060;">
+                        <div class="number" id="accLiabilities" style="color:#E06060;">0.00</div>
+                        <div class="label">📋 الالتزامات</div>
+                    </div>
+                    <div class="dashboard-card" style="border-right-color:#C9A94E;">
+                        <div class="number" id="accEquity" style="color:#C9A94E;">0.00</div>
+                        <div class="label">👑 حقوق الملكية</div>
+                    </div>
+                    <div class="dashboard-card" style="border-right-color:#4A8AB5;">
+                        <div class="number" id="accRevenue" style="color:#4A8AB5;">0.00</div>
+                        <div class="label">💰 الإيرادات</div>
+                    </div>
+                    <div class="dashboard-card" style="border-right-color:#E6A830;">
+                        <div class="number" id="accExpenses" style="color:#E6A830;">0.00</div>
+                        <div class="label">💸 المصروفات</div>
+                    </div>
+                </div>
+
+                <div class="report-buttons-grid">
+                    <button class="btn btn-info" onclick="showTrialBalance()">
+                        <i class="fas fa-balance-scale"></i>
+                        <span>ميزان المراجعة</span>
+                    </button>
+                    <button class="btn btn-success" onclick="showIncomeStatement()">
+                        <i class="fas fa-chart-line"></i>
+                        <span>قائمة الدخل</span>
+                    </button>
+                    <button class="btn btn-warning" onclick="showBalanceSheet()">
+                        <i class="fas fa-file-invoice-dollar"></i>
+                        <span>الميزانية</span>
+                    </button>
+                </div>
+
+                <div class="form-card">
+                    <h3 id="accountFormTitle">
+                        <i class="fas fa-plus-circle"></i> إضافة حساب جديد
+                    </h3>
+                    <input type="hidden" id="accountId" />
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>📌 الكود *</label>
+                            <input type="text" id="accountCode" placeholder="مثال: 1000" inputmode="numeric" />
+                        </div>
+                        <div class="form-group">
+                            <label>📝 الاسم *</label>
+                            <input type="text" id="accountName" placeholder="اسم الحساب" />
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>🏷️ النوع</label>
+                            <select id="accountType">
+                                <option value="asset">💎 أصول</option>
+                                <option value="liability">📋 التزامات</option>
+                                <option value="equity">👑 حقوق ملكية</option>
+                                <option value="revenue">💰 إيرادات</option>
+                                <option value="expense">💸 مصروفات</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>🔗 الحساب الأب</label>
+                            <select id="accountParent">
+                                <option value="">بدون (رئيسي)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>📄 ملاحظات</label>
+                        <input type="text" id="accountNotes" placeholder="اختياري" />
+                    </div>
+                    <div class="form-actions">
+                        <button class="btn btn-primary" onclick="saveAccount()">
+                            <i class="fas fa-save"></i> <span id="accountSaveBtnText">إضافة</span>
+                        </button>
+                        <button class="btn btn-secondary" onclick="resetAccountForm()">
+                            <i class="fas fa-times"></i> إلغاء
+                        </button>
+                    </div>
+                </div>
+
+                <div class="filter-chips">
+                    <button class="filter-chip active" onclick="filterAccounts('all', this)">📊 الكل</button>
+                    <button class="filter-chip" onclick="filterAccounts('asset', this)">💎 أصول</button>
+                    <button class="filter-chip" onclick="filterAccounts('liability', this)">📋 التزامات</button>
+                    <button class="filter-chip" onclick="filterAccounts('equity', this)">👑 حقوق</button>
+                    <button class="filter-chip" onclick="filterAccounts('revenue', this)">💰 إيرادات</button>
+                    <button class="filter-chip" onclick="filterAccounts('expense', this)">💸 مصروفات</button>
+                </div>
+
+                <h3 style="color:#C9A94E;margin:14px 0 10px;font-size:15px;">
+                    <i class="fas fa-list"></i> دليل الحسابات
+                </h3>
+                <div id="accountList"></div>
+
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-top:20px;">
+                    <h3 style="color:#C9A94E;font-size:15px;">
+                        <i class="fas fa-history"></i> القيود اليومية
+                    </h3>
+                    <button class="btn btn-success btn-sm" onclick="showAddJournalDialog()">
+                        <i class="fas fa-plus"></i> قيد جديد
+                    </button>
+                </div>
+                <div id="journalList" style="margin-top:10px;"></div>
+            </div>
+        </div>
+
+        <!-- ============ التقارير ============ -->
         <div id="page-reports" class="page-container">
             <div class="page-content">
                 <h2><i class="fas fa-chart-bar"></i> التقارير</h2>
@@ -676,7 +788,7 @@
             </div>
         </div>
 
-        <!-- المستخدمين -->
+        <!-- ============ المستخدمين ============ -->
         <div id="page-users" class="page-container">
             <div class="page-content">
                 <h2><i class="fas fa-user-cog"></i> المستخدمين</h2>
@@ -706,7 +818,7 @@
             </div>
         </div>
 
-        <!-- الإعدادات -->
+        <!-- ============ الإعدادات ============ -->
         <div id="page-settings" class="page-container">
             <div class="page-content">
                 <h2><i class="fas fa-cog"></i> الإعدادات</h2>
@@ -731,20 +843,18 @@
                 </div>
                 <div class="settings-section">
                     <h3>ℹ️ عن التطبيق</h3>
-                    <div class="settings-info-row"><span>الإصدار</span><span>14.0.0</span></div>
+                    <div class="settings-info-row"><span>الإصدار</span><span>15.0.0</span></div>
                     <div class="settings-info-row"><span>المنتجات</span><span id="setProductsCount">0</span></div>
                     <div class="settings-info-row"><span>الفواتير</span><span id="setSalesCount">0</span></div>
                     <div class="settings-info-row"><span>العملاء</span><span id="setCustomersCount">0</span></div>
                     <div class="settings-info-row"><span>الموردين</span><span id="setSuppliersCount">0</span></div>
                 </div>
-
                 <div class="settings-section">
-    <h3>🚪 تسجيل الخروج</h3>
-    <button class="btn btn-warning btn-block" onclick="lockApp()">
-        <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
-    </button>
-</div>
-                
+                    <h3>🚪 تسجيل الخروج</h3>
+                    <button class="btn btn-warning btn-block" onclick="lockApp()">
+                        <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
+                    </button>
+                </div>
                 <div class="settings-section danger">
                     <h3>⚠️ منطقة الخطر</h3>
                     <button class="btn btn-danger btn-block" onclick="clearAllData()"><i class="fas fa-trash"></i> مسح كل البيانات</button>
@@ -752,102 +862,7 @@
             </div>
         </div>
 
-        <!-- قسم الحسابات -->
-<div id="page-accounts" class="page-container">
-    <div class="page-content">
-        <h2><i class="fas fa-book"></i> الحسابات</h2>
-
-        <!-- إحصائيات -->
-        <div class="dashboard-stats">
-            <div class="dashboard-card" style="border-right-color:#2D8F5E;">
-                <div class="number" id="accAssets" style="color:#2D8F5E;">0.00</div>
-                <div class="label">💎 الأصول</div>
-            </div>
-            <div class="dashboard-card" style="border-right-color:#E06060;">
-                <div class="number" id="accLiabilities" style="color:#E06060;">0.00</div>
-                <div class="label">📋 الالتزامات</div>
-            </div>
-            <div class="dashboard-card" style="border-right-color:#C9A94E;">
-                <div class="number" id="accEquity" style="color:#C9A94E;">0.00</div>
-                <div class="label">👑 حقوق الملكية</div>
-            </div>
-            <div class="dashboard-card" style="border-right-color:#4A8AB5;">
-                <div class="number" id="accRevenue" style="color:#4A8AB5;">0.00</div>
-                <div class="label">💰 الإيرادات</div>
-            </div>
-            <div class="dashboard-card" style="border-right-color:#E6A830;">
-                <div class="number" id="accExpenses" style="color:#E6A830;">0.00</div>
-                <div class="label">💸 المصروفات</div>
-            </div>
-        </div>
-
-        <!-- أزرار التقارير -->
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:14px;">
-            <button class="btn btn-info" onclick="showTrialBalance()">
-                <i class="fas fa-balance-scale"></i> ميزان المراجعة
-            </button>
-            <button class="btn btn-success" onclick="showIncomeStatement()">
-                <i class="fas fa-chart-line"></i> قائمة الدخل
-            </button>
-            <button class="btn btn-warning" onclick="showBalanceSheet()">
-                <i class="fas fa-file-invoice-dollar"></i> الميزانية
-            </button>
-        </div>
-
-        <!-- نموذج إضافة حساب -->
-<div class="form-card">
-    <h3 id="accountFormTitle" style="display:flex;align-items:center;gap:8px;">
-        <i class="fas fa-plus-circle" style="color:#C9A94E;"></i>
-        إضافة حساب جديد
-    </h3>
-    <input type="hidden" id="accountId" />
-    
-    <div class="form-row">
-        <div class="form-group">
-            <label>📌 الكود *</label>
-            <input type="text" id="accountCode" placeholder="مثال: 1000" inputmode="numeric" />
-        </div>
-        <div class="form-group">
-            <label>📝 الاسم *</label>
-            <input type="text" id="accountName" placeholder="اسم الحساب" />
-        </div>
-    </div>
-    
-    <div class="form-row">
-        <div class="form-group">
-            <label>🏷️ النوع</label>
-            <select id="accountType">
-                <option value="asset">💎 أصول</option>
-                <option value="liability">📋 التزامات</option>
-                <option value="equity">👑 حقوق ملكية</option>
-                <option value="revenue">💰 إيرادات</option>
-                <option value="expense">💸 مصروفات</option>
-            </select>
-        </div>
-        <div class="form-group">
-            <label>🔗 الحساب الأب</label>
-            <select id="accountParent">
-                <option value="">بدون (رئيسي)</option>
-            </select>
-        </div>
-    </div>
-    
-    <div class="form-group">
-        <label>📄 ملاحظات</label>
-        <input type="text" id="accountNotes" placeholder="اختياري" />
-    </div>
-    
-    <div class="form-actions">
-        <button class="btn btn-primary" onclick="saveAccount()">
-            <i class="fas fa-save"></i> <span id="accountSaveBtnText">إضافة</span>
-        </button>
-        <button class="btn btn-secondary" onclick="resetAccountForm()">
-            <i class="fas fa-times"></i> إلغاء
-        </button>
-    </div>
-</div>
-
-        <!-- شريط التنقل السفلي -->
+        <!-- ============ شريط التنقل السفلي ============ -->
         <nav class="bottom-nav">
             <button class="nav-item active" data-page="dashboard" onclick="navigateTo('dashboard')"><i class="fas fa-chart-pie"></i><span>الرئيسية</span></button>
             <button class="nav-item" data-page="inventory" onclick="navigateTo('inventory')"><i class="fas fa-box"></i><span>المخزون</span></button>
@@ -856,42 +871,45 @@
             <button class="nav-item" data-page="more" onclick="toggleMoreMenu()"><i class="fas fa-ellipsis-h"></i><span>المزيد</span></button>
         </nav>
 
-        <!-- قائمة المزيد -->
+        <!-- ============ قائمة المزيد ============ -->
         <div id="moreMenu" style="display:none;position:fixed;bottom:85px;left:50%;transform:translateX(-50%);background:#1C1C1C;border:2px solid #C9A94E;border-radius:14px;padding:12px;z-index:100;min-width:280px;max-width:90%;box-shadow:0 -8px 32px rgba(0,0,0,0.7);">
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-                <button class="more-item" onclick="navigateTo('purchases'); toggleMoreMenu();" style="display:flex;flex-direction:column;align-items:center;gap:4px;background:#0D0D0D;border:2px solid #2D2D2D;color:#F5E6C8;padding:12px 6px;border-radius:10px;font-family:inherit;font-size:12px;cursor:pointer;">
-                    <i class="fas fa-shopping-cart" style="color:#E06060;font-size:20px;"></i> المشتريات
+                <button class="more-item" onclick="navigateTo('purchases'); toggleMoreMenu();">
+                    <i class="fas fa-shopping-cart" style="color:#E06060;"></i> المشتريات
                 </button>
-                <button class="more-item" onclick="navigateTo('customers'); toggleMoreMenu();" style="display:flex;flex-direction:column;align-items:center;gap:4px;background:#0D0D0D;border:2px solid #2D2D2D;color:#F5E6C8;padding:12px 6px;border-radius:10px;font-family:inherit;font-size:12px;cursor:pointer;">
-                    <i class="fas fa-users" style="color:#4A8AB5;font-size:20px;"></i> العملاء
+                <button class="more-item" onclick="navigateTo('customers'); toggleMoreMenu();">
+                    <i class="fas fa-users" style="color:#4A8AB5;"></i> العملاء
                 </button>
-                <button class="more-item" onclick="navigateTo('suppliers'); toggleMoreMenu();" style="display:flex;flex-direction:column;align-items:center;gap:4px;background:#0D0D0D;border:2px solid #2D2D2D;color:#F5E6C8;padding:12px 6px;border-radius:10px;font-family:inherit;font-size:12px;cursor:pointer;">
-                    <i class="fas fa-truck" style="color:#E6A830;font-size:20px;"></i> الموردين
+                <button class="more-item" onclick="navigateTo('suppliers'); toggleMoreMenu();">
+                    <i class="fas fa-truck" style="color:#E6A830;"></i> الموردين
                 </button>
-                <button class="more-item" onclick="navigateTo('expenses'); toggleMoreMenu();" style="display:flex;flex-direction:column;align-items:center;gap:4px;background:#0D0D0D;border:2px solid #2D2D2D;color:#F5E6C8;padding:12px 6px;border-radius:10px;font-family:inherit;font-size:12px;cursor:pointer;">
-                    <i class="fas fa-money-bill-wave" style="color:#E6A830;font-size:20px;"></i> المصروفات
+                <button class="more-item" onclick="navigateTo('expenses'); toggleMoreMenu();">
+                    <i class="fas fa-money-bill-wave" style="color:#E6A830;"></i> المصروفات
                 </button>
-                <button class="more-item" onclick="navigateTo('invoices'); toggleMoreMenu();" style="display:flex;flex-direction:column;align-items:center;gap:4px;background:#0D0D0D;border:2px solid #2D2D2D;color:#F5E6C8;padding:12px 6px;border-radius:10px;font-family:inherit;font-size:12px;cursor:pointer;">
-                    <i class="fas fa-file-invoice" style="color:#2D8F5E;font-size:20px;"></i> الفواتير
+                <button class="more-item" onclick="navigateTo('invoices'); toggleMoreMenu();">
+                    <i class="fas fa-file-invoice" style="color:#2D8F5E;"></i> الفواتير
                 </button>
-                <button class="more-item" onclick="navigateTo('payments'); toggleMoreMenu();" style="display:flex;flex-direction:column;align-items:center;gap:4px;background:#0D0D0D;border:2px solid #2D2D2D;color:#F5E6C8;padding:12px 6px;border-radius:10px;font-family:inherit;font-size:12px;cursor:pointer;">
-                    <i class="fas fa-hand-holding-usd" style="color:#2D8F5E;font-size:20px;"></i> التحصيل/السداد
+                <button class="more-item" onclick="navigateTo('payments'); toggleMoreMenu();">
+                    <i class="fas fa-hand-holding-usd" style="color:#2D8F5E;"></i> التحصيل/السداد
                 </button>
-                <button class="more-item" onclick="navigateTo('returns'); toggleMoreMenu();" style="display:flex;flex-direction:column;align-items:center;gap:4px;background:#0D0D0D;border:2px solid #2D2D2D;color:#F5E6C8;padding:12px 6px;border-radius:10px;font-family:inherit;font-size:12px;cursor:pointer;">
-                    <i class="fas fa-undo-alt" style="color:#E6A830;font-size:20px;"></i> المرتجعات
+                <button class="more-item" onclick="navigateTo('returns'); toggleMoreMenu();">
+                    <i class="fas fa-undo-alt" style="color:#E6A830;"></i> المرتجعات
                 </button>
-                <button class="more-item" onclick="navigateTo('treasury'); toggleMoreMenu();" style="display:flex;flex-direction:column;align-items:center;gap:4px;background:#0D0D0D;border:2px solid #2D2D2D;color:#F5E6C8;padding:12px 6px;border-radius:10px;font-family:inherit;font-size:12px;cursor:pointer;">
-                    <i class="fas fa-vault" style="color:#C9A94E;font-size:20px;"></i> حركات الخزنة
+                <button class="more-item" onclick="navigateTo('treasury'); toggleMoreMenu();">
+                    <i class="fas fa-vault" style="color:#C9A94E;"></i> حركات الخزنة
                 </button>
-                <button class="more-item" onclick="navigateTo('users'); toggleMoreMenu();" style="display:flex;flex-direction:column;align-items:center;gap:4px;background:#0D0D0D;border:2px solid #2D2D2D;color:#F5E6C8;padding:12px 6px;border-radius:10px;font-family:inherit;font-size:12px;cursor:pointer;">
-                    <i class="fas fa-user-cog" style="color:#9B59B6;font-size:20px;"></i> المستخدمين
+                <button class="more-item" onclick="navigateTo('accounts'); toggleMoreMenu();">
+                    <i class="fas fa-book" style="color:#C9A94E;"></i> الحسابات
                 </button>
-                <button class="more-item" onclick="navigateTo('settings'); toggleMoreMenu();" style="display:flex;flex-direction:column;align-items:center;gap:4px;background:#0D0D0D;border:2px solid #2D2D2D;color:#F5E6C8;padding:12px 6px;border-radius:10px;font-family:inherit;font-size:12px;cursor:pointer;">
-                    <i class="fas fa-cog" style="color:#C9A94E;font-size:20px;"></i> الإعدادات
+                <button class="more-item" onclick="navigateTo('cash-boxes'); toggleMoreMenu();">
+                    <i class="fas fa-money-bill-wave" style="color:#9B59B6;"></i> الخزائن
                 </button>
-                <button class="more-item" onclick="navigateTo('accounts'); toggleMoreMenu();" style="display:flex;flex-direction:column;align-items:center;gap:4px;background:#0D0D0D;border:2px solid #2D2D2D;color:#F5E6C8;padding:12px 6px;border-radius:10px;font-family:inherit;font-size:12px;cursor:pointer;">
-    <i class="fas fa-book" style="color:#C9A94E;font-size:20px;"></i> الحسابات
-</button>
+                <button class="more-item" onclick="navigateTo('users'); toggleMoreMenu();">
+                    <i class="fas fa-user-cog" style="color:#9B59B6;"></i> المستخدمين
+                </button>
+                <button class="more-item" onclick="navigateTo('settings'); toggleMoreMenu();">
+                    <i class="fas fa-cog" style="color:#C9A94E;"></i> الإعدادات
+                </button>
             </div>
         </div>
 
@@ -906,48 +924,18 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 
     <script src="app.js"></script>
-<script src="app-extras.js"></script>
-<script src="accounts.js"></script>   <!-- ✅ جديد -->
-<script src="dev-panel.js"></script>
-
-    <!-- تسجيل Service Worker -->
-<script>
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('./sw.js')
-                .then(reg => console.log('✅ SW مسجل:', reg.scope))
-                .catch(err => console.warn('⚠️ SW فشل:', err.message));
-        });
-    }
-
-    // زر التثبيت
-    let deferredPrompt;
-    window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault();
-        deferredPrompt = e;
-        
-        // إظهار زر التثبيت
-        setTimeout(() => {
-            if (typeof showToast === 'function') {
-                showToast('📱 يمكنك تثبيت التطبيق! اضغط على قائمة المتصفح', 'info');
-            }
-        }, 5000);
-    });
-
-    // زر تثبيت يدوي
-    window.installPWA = async function() {
-        if (deferredPrompt) {
-            deferredPrompt.prompt();
-            const { outcome } = await deferredPrompt.userChoice;
-            if (outcome === 'accepted') {
-                showToast('✅ تم تثبيت التطبيق!', 'success');
-            }
-            deferredPrompt = null;
-        } else {
-            alert('📱 لتثبيت التطبيق:\n\n1. افتح قائمة المتصفح\n2. اختر "إضافة إلى الشاشة الرئيسية"');
+    <script src="app-extras.js"></script>
+    <script src="accounts.js"></script>
+    
+    <!-- Service Worker -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('✅ SW مسجل:', reg.scope))
+                    .catch(err => console.warn('⚠️ SW فشل:', err.message));
+            });
         }
-    };
-</script>
-
+    </script>
 </body>
 </html>
