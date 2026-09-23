@@ -931,14 +931,15 @@
     <script src="accounts.js"></script>
     
     <!-- Service Worker -->
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
-                    .then(reg => console.log('✅ SW مسجل:', reg.scope))
-                    .catch(err => console.warn('⚠️ SW فشل:', err.message));
-            });
-        }
-    </script>
+  <!-- Service Worker -->
+<script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./sw.js')
+                .then(reg => console.log('✅ SW مسجل:', reg.scope))
+                .catch(err => console.warn('⚠️ SW فشل:', err.message));
+        });
+    }
+</script>
 </body>
 </html>
