@@ -1,7 +1,7 @@
 {
-  "name": "الميزان - نظام محاسبة",
+  "name": "الميزان - نظام محاسبة ونقاط بيع",
   "short_name": "الميزان",
-  "description": "نظام محاسبة ونقاط بيع متكامل",
+  "description": "نظام محاسبة متكامل مع كاشير ومخزون وتقارير",
   "start_url": "./index.html",
   "display": "standalone",
   "orientation": "portrait",
@@ -10,6 +10,7 @@
   "lang": "ar",
   "dir": "rtl",
   "scope": "./",
+  "categories": ["business", "finance", "productivity"],
   "icons": [
     {
       "src": "icon.png",
@@ -24,20 +25,18 @@
       "purpose": "any maskable"
     }
   ],
-  "categories": ["business", "finance", "productivity"],
   "shortcuts": [
     {
       "name": "الكاشير",
       "short_name": "كاشير",
       "description": "فتح الكاشير مباشرة",
-      "url": "./index.html?page=cashier",
+      "url": "./index.html#cashier",
       "icons": [{ "src": "icon.png", "sizes": "192x192" }]
     },
     {
       "name": "المخزون",
       "short_name": "مخزون",
-      "description": "فتح المخزون",
-      "url": "./index.html?page=inventory",
+      "url": "./index.html#inventory",
       "icons": [{ "src": "icon.png", "sizes": "192x192" }]
     }
   ]
