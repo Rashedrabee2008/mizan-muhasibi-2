@@ -2499,3 +2499,317 @@ button,
         gap: 16px !important;
     }
 }
+
+
+/* ============================================================
+   ⏰ تحسين الساعة والتاريخ
+   ============================================================ */
+
+.top-header .clock {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: #0D0D0D !important;
+    border: 1.5px solid #3D3D3D !important;
+    border-radius: 8px !important;
+    padding: 0 8px !important;
+    color: #C9A94E !important;
+    font-size: 10px !important;
+    font-family: 'Courier New', monospace !important;
+    direction: ltr !important;
+    height: 30px !important;
+    min-width: 130px !important;
+    font-weight: 700 !important;
+    white-space: nowrap !important;
+    letter-spacing: 0.3px !important;
+}
+
+/* على الموبايل - مختصرة */
+@media (max-width: 600px) {
+    .top-header .clock {
+        min-width: 100px !important;
+        max-width: 110px !important;
+        font-size: 9px !important;
+        padding: 0 5px !important;
+    }
+}
+
+@media (max-width: 400px) {
+    .top-header .clock {
+        min-width: 90px !important;
+        max-width: 95px !important;
+        font-size: 8px !important;
+        padding: 0 3px !important;
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   🌍 دعم اللغة الإنجليزية
+   ═══════════════════════════════════════════════════════════ */
+
+html[dir="ltr"] body {
+    direction: ltr !important;
+}
+
+html[dir="ltr"] .top-header {
+    flex-direction: row !important;
+}
+
+html[dir="ltr"] .top-header .header-text {
+    text-align: left !important;
+}
+
+html[dir="ltr"] .top-header .header-actions {
+    margin-left: auto !important;
+    margin-right: 0 !important;
+}
+
+html[dir="ltr"] .bottom-nav {
+    direction: ltr !important;
+}
+
+html[dir="ltr"] .page-content h2 {
+    flex-direction: row !important;
+}
+
+html[dir="ltr"] .form-group label {
+    text-align: left !important;
+}
+
+html[dir="ltr"] input,
+html[dir="ltr"] select,
+html[dir="ltr"] textarea {
+    text-align: left !important;
+    direction: ltr !important;
+}
+
+/* الأرقام في الإنجليزية */
+html[dir="ltr"] .dashboard-card .number,
+html[dir="ltr"] .pos-total-value,
+html[dir="ltr"] .total-value {
+    font-family: 'Courier New', monospace !important;
+    direction: ltr !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   🎨 تحسين زر اللغة
+   ═══════════════════════════════════════════════════════════ */
+#langToggleBtn {
+    background: #0D0D0D !important;
+    border: 1.5px solid #3D3D3D !important;
+    color: #C9A94E !important;
+    width: 34px !important;
+    height: 34px !important;
+    border-radius: 8px !important;
+    cursor: pointer !important;
+    font-size: 11px !important;
+    font-weight: 900 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: all 0.2s !important;
+    padding: 0 !important;
+    font-family: 'Tajawal', sans-serif !important;
+}
+
+#langToggleBtn:hover {
+    background: #C9A94E !important;
+    color: #0D0D0D !important;
+    border-color: #C9A94E !important;
+}
+
+/* على الموبايل */
+@media (max-width: 600px) {
+    #langToggleBtn {
+        width: 30px !important;
+        height: 30px !important;
+        font-size: 10px !important;
+    }
+}
+
+@media (max-width: 400px) {
+    #langToggleBtn {
+        width: 28px !important;
+        height: 28px !important;
+        font-size: 9px !important;
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   🎨 تحسين الهيدر - الجديد
+   ═══════════════════════════════════════════════════════════ */
+.top-header {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    padding: 10px 12px !important;
+    background: #1C1C1C !important;
+    border-radius: 14px !important;
+    border: 1px solid #2D2D2D !important;
+    margin-bottom: 14px !important;
+    overflow: hidden !important;
+}
+
+.top-header .logo-icon {
+    font-size: 22px !important;
+    color: #C9A94E !important;
+    flex-shrink: 0 !important;
+    width: 38px !important;
+    height: 38px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: linear-gradient(135deg, #C9A94E, #B8953A) !important;
+    border-radius: 10px !important;
+    color: #0D0D0D !important;
+}
+
+.top-header .logo-icon i {
+    color: #0D0D0D !important;
+}
+
+.top-header .header-text {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1px !important;
+    flex-shrink: 0 !important;
+    max-width: 130px !important;
+}
+
+.top-header .header-text h1 {
+    font-size: 16px !important;
+    font-weight: 900 !important;
+    color: #C9A94E !important;
+    line-height: 1.1 !important;
+    margin: 0 !important;
+}
+
+.top-header .header-text .sub-title {
+    font-size: 9px !important;
+    color: #A89070 !important;
+    line-height: 1.1 !important;
+}
+
+.top-header .header-actions {
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    margin-right: auto !important;
+    margin-left: 0 !important;
+    flex-wrap: nowrap !important;
+    overflow: hidden !important;
+}
+
+/* أزرار الهيدر موحدة */
+.top-header .user-badge,
+.top-header .clock,
+.top-header .lock-btn,
+#themeToggleBtn,
+#langToggleBtn {
+    height: 30px !important;
+    min-height: 30px !important;
+    border-radius: 8px !important;
+    flex-shrink: 0 !important;
+}
+
+.top-header .user-badge {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    padding: 0 8px !important;
+    background: #0D0D0D !important;
+    border: 1.5px solid #C9A94E !important;
+    color: #C9A94E !important;
+    font-size: 11px !important;
+    font-weight: 800 !important;
+    max-width: 90px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+.top-header .user-badge i {
+    font-size: 13px !important;
+    flex-shrink: 0 !important;
+}
+
+.top-header .lock-btn {
+    background: #0D0D0D !important;
+    border: 1.5px solid #E06060 !important;
+    color: #E06060 !important;
+    width: 30px !important;
+    min-width: 30px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    font-size: 13px !important;
+    padding: 0 !important;
+    transition: all 0.2s !important;
+}
+
+.top-header .lock-btn:hover {
+    background: #E06060 !important;
+    color: #fff !important;
+}
+
+/* استجابة الموبايل */
+@media (max-width: 600px) {
+    .top-header {
+        padding: 8px 10px !important;
+        gap: 6px !important;
+    }
+    
+    .top-header .logo-icon {
+        width: 34px !important;
+        height: 34px !important;
+        font-size: 20px !important;
+    }
+    
+    .top-header .header-text {
+        max-width: 100px !important;
+    }
+    
+    .top-header .header-text h1 {
+        font-size: 14px !important;
+    }
+    
+    .top-header .header-text .sub-title {
+        font-size: 8px !important;
+    }
+    
+    .top-header .header-actions {
+        gap: 3px !important;
+    }
+    
+    .top-header .user-badge span {
+        display: none !important;
+    }
+    
+    .top-header .user-badge {
+        width: 30px !important;
+        min-width: 30px !important;
+        padding: 0 !important;
+        justify-content: center !important;
+    }
+}
+
+@media (max-width: 400px) {
+    .top-header .logo-icon {
+        width: 30px !important;
+        height: 30px !important;
+        font-size: 16px !important;
+    }
+    
+    .top-header .header-text {
+        max-width: 80px !important;
+    }
+    
+    .top-header .header-text h1 {
+        font-size: 13px !important;
+    }
+    
+    .top-header .clock {
+        display: none !important;
+    }
+}
