@@ -931,6 +931,73 @@ body.light-mode .bottom-nav { background: #FFFFFF !important; border-color: #E0D
     /* لوحة التحكم - 4 أعمدة */
     .dashboard-stats {
         grid-template-columns: repeat(4, 1fr) !important;
+
+       /* ============================================================
+   📱 التنسيق التلقائي للموبايل
+   ============================================================ */
+
+/* ═══ الموبايل (أقل من 480px) ═══ */
+@media (max-width: 480px) {
+    #langToggleBtn { display: none !important; }
+    
+    .top-header .header-actions .clock {
+        font-size: 9px !important;
+        max-width: 60px !important;
+        padding: 0 4px !important;
+    }
+    
+    .top-header .user-badge span { display: none !important; }
+    
+    .top-header .header-actions > * {
+        height: 26px !important;
+        min-width: 26px !important;
+        padding: 0 4px !important;
+        font-size: 10px !important;
+    }
+    
+    .top-header { padding: 8px 10px !important; gap: 5px !important; }
+    .top-header .logo-icon { font-size: 18px !important; width: 28px !important; height: 28px !important; }
+    .top-header .header-text h1 { font-size: 15px !important; }
+    .top-header .header-text .sub-title { font-size: 9px !important; }
+    .top-header .lock-btn { display: none !important; }
+    
+    .modal-box { max-width: 95% !important; padding: 16px !important; }
+    .btn { font-size: 12px !important; padding: 10px 14px !important; min-height: 40px !important; }
+    .dashboard-card .number { font-size: 18px !important; }
+    .dashboard-card .label { font-size: 10px !important; }
+    #advancedChartContainer { padding: 10px !important; }
+    .top-header .header-actions { gap: 2px !important; }
+}
+
+/* ═══ الموبايل الصغير (أقل من 360px) ═══ */
+@media (max-width: 360px) {
+    #langToggleBtn,
+    #themeToggleBtn { display: none !important; }
+    .top-header .clock { display: none !important; }
+}
+
+/* ═══ الكمبيوتر (أكبر من 768px) ═══ */
+@media (min-width: 768px) {
+    body { padding: 20px 40px 100px !important; }
+    .top-header { padding: 12px 20px !important; }
+    .top-header .header-text h1 { font-size: 22px !important; }
+    .top-header .header-text .sub-title { font-size: 12px !important; }
+    .top-header .user-badge span { display: inline !important; margin-right: 4px; }
+    .top-header .header-actions > * {
+        height: 34px !important;
+        min-width: 34px !important;
+        font-size: 13px !important;
+    }
+    .dashboard-stats { grid-template-columns: repeat(4, 1fr) !important; }
+    .form-row { grid-template-columns: 1fr 1fr !important; }
+}
+
+/* ═══ زر التثبيت PWA ═══ */
+.pwa-install-btn {
+    background: linear-gradient(135deg, #C9A94E, #B8953A) !important;
+    color: #0D0D0D !important;
+    font-weight: 900 !important;
+}
     }
 
     /* النموذج - عمودين */
