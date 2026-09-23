@@ -1,8 +1,9 @@
 // ============================================================
-// الميزان 14.0.0 - app.js (النسخة المُصلحة الكاملة)
+// الميزان 14.0.0 - app.js (النسخة الكاملة المحدثة)
+// مع إصلاحات Firebase + مزامنة تلقائية للمستخدمين
 // ============================================================
 
-console.log('🚀 تحميل app.js - النسخة المُصلحة');
+console.log('🚀 تحميل app.js - النسخة الكاملة المحدثة');
 
 // ═══════════════════════════════════════════════════════════
 // ☁️ Firebase Configuration
@@ -72,6 +73,13 @@ window.getData = function(key, def) {
 
 window.setData = function(key, data) {
     try { localStorage.setItem(STORAGE_KEY + key, JSON.stringify(data)); } catch (e) {}
+};
+
+// ✅ تحويل Firebase Object إلى Array
+window.toArray = function(data) {
+    if (!data) return [];
+    if (Array.isArray(data)) return data;
+    return Object.values(data).filter(item => item !== null && item !== undefined);
 };
 
 window.showToast = function(msg, type) {
@@ -234,30 +242,28 @@ window.syncFromCloud = function(silent) {
 
             const data = snapshot.val();
 
-            // ✅ التحقق من صحة البيانات قبل الاستبدال
-            if (data.products && Array.isArray(data.products)) {
-                window.products = data.products.map(function(p) {
-                    return {
-                        id: p.id || Date.now() + Math.random(),
-                        name: p.name || 'منتج غير معروف',
-                        buy: Number(p.buy) || 0,
-                        sell: Number(p.sell) || 0,
-                        qty: Number(p.qty) || 0,
-                        min: Number(p.min) || 5,
-                        barcode: p.barcode || ''
-                    };
-                });
-            }
-            if (data.sales && Array.isArray(data.sales)) window.sales = data.sales;
-            if (data.purchases && Array.isArray(data.purchases)) window.purchases = data.purchases;
-            if (data.customers && Array.isArray(data.customers)) window.customers = data.customers;
-            if (data.suppliers && Array.isArray(data.suppliers)) window.suppliers = data.suppliers;
-            if (data.cashBoxes && Array.isArray(data.cashBoxes)) window.cashBoxes = data.cashBoxes;
-            if (data.expenses && Array.isArray(data.expenses)) window.expenses = data.expenses;
-            if (data.treasury && Array.isArray(data.treasury)) window.treasury = data.treasury;
-            if (data.payments && Array.isArray(data.payments)) window.payments = data.payments;
-            if (data.returns && Array.isArray(data.returns)) window.returns = data.returns;
-            if (data.users && Array.isArray(data.users)) window.users = data.users;
+            // ✅ استخدام toArray لكل البيانات
+            if (data.products) window.products = toArray(data.products).map(function(p) {
+                return {
+                    id: p.id || Date.now() + Math.random(),
+                    name: p.name || 'منتج غير معروف',
+                    buy: Number(p.buy) || 0,
+                    sell: Number(p.sell) || 0,
+                    qty: Number(p.qty) || 0,
+                    min: Number(p.min) || 5,
+                    barcode: p.barcode || ''
+                };
+            });
+            if (data.sales) window.sales = toArray(data.sales);
+            if (data.purchases) window.purchases = toArray(data.purchases);
+            if (data.customers) window.customers = toArray(data.customers);
+            if (data.suppliers) window.suppliers = toArray(data.suppliers);
+            if (data.cashBoxes) window.cashBoxes = toArray(data.cashBoxes);
+            if (data.expenses) window.expenses = toArray(data.expenses);
+            if (data.treasury) window.treasury = toArray(data.treasury);
+            if (data.payments) window.payments = toArray(data.payments);
+            if (data.returns) window.returns = toArray(data.returns);
+            if (data.users) window.users = toArray(data.users);
             if (data.companyData && typeof data.companyData === 'object') window.companyData = data.companyData;
             if (data.vatSettings && typeof data.vatSettings === 'object') window.vatSettings = data.vatSettings;
 
@@ -274,6 +280,7 @@ window.syncFromCloud = function(silent) {
             renderReturns();
             renderUsers();
             renderSettings();
+            populateLoginUsers();
             populateSaleProducts();
             populateSaleCustomers();
             populatePurProducts();
@@ -290,6 +297,41 @@ window.syncFromCloud = function(silent) {
             if (!silent) showToast('❌ فشل التحميل: ' + err.message, 'error');
             updateSyncStatus('🔴 فشل التحميل', 'error');
         });
+};
+
+// ✅ مزامنة المستخدمين فقط (للموبايل)
+window.syncUsersFromCloud = async function() {
+    if (!window.firebaseReady) return;
+    try {
+        const snapshot = await firebase.database().ref('mizan/users').once('value');
+        if (snapshot.exists()) {
+            let usersData = snapshot.val();
+            if (!Array.isArray(usersData)) {
+                usersData = Object.values(usersData);
+            }
+            usersData = usersData.filter(u => u && u.id);
+            
+            // مقارنة مع المستخدمين الحاليين
+            const currentCount = (window.users || []).length;
+            const newCount = usersData.length;
+            
+            if (currentCount !== newCount) {
+                window.users = usersData;
+                setData('users', window.users);
+                if (typeof populateLoginUsers === 'function') {
+                    populateLoginUsers();
+                }
+                console.log('✅ تم تحديث المستخدمين:', newCount, 'مستخدم');
+                
+                // إشعار للمستخدم
+                if (typeof showToast === 'function') {
+                    showToast('🔄 تم تحديث قائمة المستخدمين', 'info');
+                }
+            }
+        }
+    } catch (e) {
+        console.warn('⚠️ فشل تحديث المستخدمين:', e.message);
+    }
 };
 
 window.updateSyncStatus = function(msg, type) {
@@ -317,7 +359,10 @@ window.autoSyncDebounce = null;
 window.startAutoSync = function() {
     if (autoSyncInterval) clearInterval(autoSyncInterval);
     autoSyncInterval = setInterval(function() {
-        if (firebaseReady && currentUser) syncToCloud();
+        if (firebaseReady && currentUser) {
+            syncToCloud();
+            syncUsersFromCloud();
+        }
     }, 5 * 60 * 1000);
 };
 
@@ -465,6 +510,7 @@ window.saveProduct = function() {
     resetProductForm();
     renderProducts();
     updateDashboard();
+    scheduleAutoSync();
 };
 
 window.resetProductForm = function() {
@@ -500,6 +546,7 @@ window.deleteProduct = function(id) {
     setData('products', products);
     renderProducts();
     updateDashboard();
+    scheduleAutoSync();
     showToast('🗑️ تم الحذف', 'info');
 };
 
@@ -566,6 +613,7 @@ window.saveCustomer = function() {
     populateSaleCustomers();
     populateCollectCustomers();
     updateDashboard();
+    scheduleAutoSync();
 };
 
 window.resetCustomerForm = function() {
@@ -600,6 +648,7 @@ window.deleteCustomer = function(id) {
     populateSaleCustomers();
     populateCollectCustomers();
     updateDashboard();
+    scheduleAutoSync();
     showToast('🗑️ تم الحذف', 'info');
 };
 
@@ -667,6 +716,7 @@ window.saveSupplier = function() {
     populatePurSuppliers();
     populatePaySuppliers();
     updateDashboard();
+    scheduleAutoSync();
 };
 
 window.resetSupplierForm = function() {
@@ -701,6 +751,7 @@ window.deleteSupplier = function(id) {
     populatePurSuppliers();
     populatePaySuppliers();
     updateDashboard();
+    scheduleAutoSync();
     showToast('🗑️ تم الحذف', 'info');
 };
 
@@ -795,6 +846,7 @@ window.saveCashBox = function() {
     resetCashBoxForm();
     renderCashBoxes();
     populateCashBoxDropdowns();
+    scheduleAutoSync();
 };
 
 window.resetCashBoxForm = function() {
@@ -837,6 +889,7 @@ window.deleteCashBox = function(id) {
     setData('cashBoxes', cashBoxes);
     renderCashBoxes();
     populateCashBoxDropdowns();
+    scheduleAutoSync();
     showToast('🗑️ تم الحذف', 'info');
 };
 
@@ -847,6 +900,7 @@ window.setDefaultCashBox = function(id) {
     setData('cashBoxes', cashBoxes);
     renderCashBoxes();
     populateCashBoxDropdowns();
+    scheduleAutoSync();
     showToast('⭐ تم التعيين', 'success');
 };
 
@@ -904,7 +958,6 @@ window.populateCashBoxDropdowns = function() {
         });
         sel.innerHTML = html;
         
-        // ✅ التحقق من صحة القيمة
         if (cv) {
             const optionExists = Array.from(sel.options).some(function(opt) { return opt.value == cv; });
             if (optionExists) sel.value = cv;
@@ -1377,7 +1430,6 @@ window.updatePurStats = function() {
     if ($('purTodayAmount')) $('purTodayAmount').textContent = formatMoney(today);
 };
 
-// ✅ الدالة المُصلحة - السطر المقطوع
 window.renderPurchases = function() {
     const c = $('purchasesList');
     if (!c) return;
@@ -1424,6 +1476,7 @@ window.deletePurchase = function(id) {
     renderProducts();
     updateDashboard();
     renderCashBoxes();
+    scheduleAutoSync();
     showToast('🗑️ تم الحذف', 'info');
 };
 
@@ -1525,6 +1578,7 @@ window.deleteExpense = function(id) {
     updateExpensesStats();
     updateDashboard();
     renderCashBoxes();
+    scheduleAutoSync();
     showToast('🗑️ تم الحذف', 'info');
 };
 
@@ -1561,6 +1615,7 @@ window.addTreasuryTransaction = function() {
     renderTreasury();
     updateDashboard();
     renderCashBoxes();
+    scheduleAutoSync();
     showToast((type === 'deposit' ? '✅ إيداع ' : '✅ سحب ') + formatMoney(amount), 'success');
 };
 
@@ -1746,6 +1801,7 @@ window.deleteInvoice = function(id) {
     renderProducts();
     updateDashboard();
     renderCashBoxes();
+    scheduleAutoSync();
     showToast('🗑️ تم الحذف', 'info');
 };
 
@@ -2273,6 +2329,7 @@ window.deleteReturn = function(id) {
     renderProducts();
     updateDashboard();
     renderCashBoxes();
+    scheduleAutoSync();
     showToast('🗑️ تم الحذف', 'info');
 };
 
@@ -2571,6 +2628,7 @@ window.saveUser = function() {
     resetUserForm();
     renderUsers();
     populateLoginUsers();
+    scheduleAutoSync();
 };
 
 window.resetUserForm = function() {
@@ -2602,6 +2660,7 @@ window.deleteUser = function(id) {
     setData('users', users);
     renderUsers();
     populateLoginUsers();
+    scheduleAutoSync();
     showToast('🗑️ تم الحذف', 'info');
 };
 
@@ -2668,6 +2727,7 @@ window.renderSettings = function() {
     if ($('setSalesCount')) $('setSalesCount').textContent = sales.length;
     if ($('setCustomersCount')) $('setCustomersCount').textContent = customers.length;
     if ($('setSuppliersCount')) $('setSuppliersCount').textContent = suppliers.length;
+    if ($('setUsersCount')) $('setUsersCount').textContent = users.length;
 };
 
 window.saveCompanySettings = function() {
@@ -2679,6 +2739,7 @@ window.saveCompanySettings = function() {
     companyData.footer = $('setCompanyFooter') ? $('setCompanyFooter').value.trim() : 'شكراً لتعاملكم معنا 🌟';
     setData('companyData', companyData);
     if ($('headerCompanyName')) $('headerCompanyName').textContent = companyData.name;
+    scheduleAutoSync();
     showToast('✅ تم الحفظ', 'success');
 };
 
@@ -2709,7 +2770,13 @@ window.importData = function(event) {
         try {
             const data = JSON.parse(e.target.result);
             ['products','sales','purchases','customers','suppliers','cashBoxes','expenses','treasury','payments','returns','users','companyData'].forEach(function(k) {
-                if (data[k]) window[k] = data[k];
+                if (data[k]) {
+                    if (Array.isArray(data[k])) {
+                        window[k] = data[k];
+                    } else {
+                        window[k] = Object.values(data[k]);
+                    }
+                }
             });
             saveAll();
             init();
@@ -2759,6 +2826,7 @@ window.populateLoginUsers = function() {
             sel.innerHTML += '<option value="' + u.id + '">' + roleInfo.icon + ' ' + u.name + ' (' + roleInfo.name + ')</option>';
         }
     });
+    console.log('✅ تم تحديث قائمة الدخول:', users.length, 'مستخدم');
 };
 
 window.checkLogin = function() {
@@ -2837,19 +2905,16 @@ window.applyPermissions = function() {
     if (!currentUser) return;
     const role = currentUser.role;
     
-    // ✅ تطبيق الصلاحيات على العناصر التي تحتوي على data-permission
     document.querySelectorAll('[data-permission]').forEach(function(el) {
         const perm = el.dataset.permission;
         el.style.display = hasPermission(perm) ? '' : 'none';
     });
     
-    // إخفاء قائمة المستخدمين لغير المدير والمشرف
     const userMenuItem = document.querySelector('button[onclick*="users"]');
     if (userMenuItem) {
         userMenuItem.style.display = (role === 'admin' || role === 'manager') ? '' : 'none';
     }
     
-    // إخفاء الإعدادات لغير المدير
     const settingsMenuItem = document.querySelector('button[onclick*="settings"]');
     if (settingsMenuItem) {
         settingsMenuItem.style.display = (role === 'admin') ? '' : 'none';
@@ -2862,20 +2927,22 @@ window.applyPermissions = function() {
 window.init = function() {
     console.log('🚀 بدء التهيئة...');
 
-    window.products = getData('products', []);
-    window.sales = getData('sales', []);
-    window.purchases = getData('purchases', []);
-    window.customers = getData('customers', []);
-    window.suppliers = getData('suppliers', []);
-    window.cashBoxes = getData('cashBoxes', []);
-    window.expenses = getData('expenses', []);
-    window.treasury = getData('treasury', []);
-    window.payments = getData('payments', []);
-    window.returns = getData('returns', []);
-    window.users = getData('users', []);
+    // ✅ استخدام toArray لكل البيانات
+    window.products = toArray(getData('products', []));
+    window.sales = toArray(getData('sales', []));
+    window.purchases = toArray(getData('purchases', []));
+    window.customers = toArray(getData('customers', []));
+    window.suppliers = toArray(getData('suppliers', []));
+    window.cashBoxes = toArray(getData('cashBoxes', []));
+    window.expenses = toArray(getData('expenses', []));
+    window.treasury = toArray(getData('treasury', []));
+    window.payments = toArray(getData('payments', []));
+    window.returns = toArray(getData('returns', []));
+    window.users = toArray(getData('users', []));
     window.companyData = getData('companyData', { name: 'الميزان', phone: '', address: '', tax: '', footer: 'شكراً لتعاملكم معنا 🌟' });
     window.vatSettings = getData('vatSettings', { defaultVAT: 14 });
 
+    // ✅ إعداد البيانات الافتراضية
     if (products.length === 0 && !localStorage.getItem('mizan_seeded_v2')) {
         window.products = [
             { id: 1, name: 'قلم جاف', barcode: '1001', buy: 2, sell: 5, qty: 50, min: 10 },
@@ -2948,17 +3015,37 @@ window.init = function() {
     renderUsers();
     renderSettings();
 
-    // ✅ التحقق من وجود مستخدم مسجل مسبقاً
-    const savedUser = localStorage.getItem('mizan_current_user');
-    if (savedUser) {
-        try {
-            const u = JSON.parse(savedUser);
-            const fullUser = users.find(function(us) { return us.id == u.id; });
-            if (fullUser) {
-                // لا نسجل تلقائياً - ننتظر اختيار المستخدم
+    // ✅ المزامنة التلقائية للمستخدمين من Firebase
+    setTimeout(async function() {
+        if (window.firebaseReady) {
+            try {
+                const snapshot = await firebase.database().ref('mizan/users').once('value');
+                if (snapshot.exists()) {
+                    let usersData = snapshot.val();
+                    if (!Array.isArray(usersData)) {
+                        usersData = Object.values(usersData);
+                    }
+                    usersData = usersData.filter(u => u && u.id);
+                    
+                    if (usersData.length > 0) {
+                        window.users = usersData;
+                        setData('users', window.users);
+                        populateLoginUsers();
+                        console.log('✅ تم تحديث المستخدمين من Firebase:', usersData.length);
+                    }
+                }
+            } catch (e) {
+                console.warn('⚠️ فشل تحديث المستخدمين:', e.message);
             }
-        } catch (e) {}
-    }
+        }
+    }, 2000);
+
+    // ✅ تحديث دوري للمستخدمين (كل 30 ثانية)
+    setInterval(function() {
+        if (window.firebaseReady && !window.currentUser) {
+            syncUsersFromCloud();
+        }
+    }, 30000);
 
     console.log('✅ التطبيق جاهز!');
     console.log('👥 المستخدمون:', users.length);
@@ -2969,5 +3056,5 @@ window.init = function() {
 document.addEventListener('DOMContentLoaded', function() {
     init();
     setInterval(updateClock, 1000);
-    console.log('✅ تم تحميل app.js كاملاً - النسخة المُصلحة v15');
+    console.log('✅ تم تحميل app.js كاملاً - النسخة النهائية');
 });
