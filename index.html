@@ -795,77 +795,55 @@
         </div>
 
         <!-- نموذج إضافة حساب -->
-        <div class="form-card">
-            <h3 id="accountFormTitle">➕ إضافة حساب جديد</h3>
-            <input type="hidden" id="accountId" />
-            <div class="form-row">
-                <div class="form-group">
-                    <label>الكود *</label>
-                    <input type="text" id="accountCode" placeholder="1000" />
-                </div>
-                <div class="form-group">
-                    <label>الاسم *</label>
-                    <input type="text" id="accountName" placeholder="اسم الحساب" />
-                </div>
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label>النوع</label>
-                    <select id="accountType">
-                        <option value="asset">💎 أصول</option>
-                        <option value="liability">📋 التزامات</option>
-                        <option value="equity">👑 حقوق ملكية</option>
-                        <option value="revenue">💰 إيرادات</option>
-                        <option value="expense">💸 مصروفات</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>الحساب الأب</label>
-                    <select id="accountParent">
-                        <option value="">بدون (حساب رئيسي)</option>
-                    </select>
-                </div>
-            </div>
-            <div class="form-group">
-                <label>ملاحظات</label>
-                <input type="text" id="accountNotes" placeholder="اختياري" />
-            </div>
-            <div class="form-actions">
-                <button class="btn btn-primary" onclick="saveAccount()">
-                    <i class="fas fa-save"></i> <span id="accountSaveBtnText">إضافة</span>
-                </button>
-                <button class="btn btn-secondary" onclick="resetAccountForm()">
-                    <i class="fas fa-times"></i> إلغاء
-                </button>
-            </div>
+<div class="form-card">
+    <h3 id="accountFormTitle" style="display:flex;align-items:center;gap:8px;">
+        <i class="fas fa-plus-circle" style="color:#C9A94E;"></i>
+        إضافة حساب جديد
+    </h3>
+    <input type="hidden" id="accountId" />
+    
+    <div class="form-row">
+        <div class="form-group">
+            <label>📌 الكود *</label>
+            <input type="text" id="accountCode" placeholder="مثال: 1000" inputmode="numeric" />
         </div>
-
-        <!-- فلترة الحسابات -->
-        <div class="filter-chips">
-            <button class="filter-chip active" onclick="filterAccounts('all', this)">📊 الكل</button>
-            <button class="filter-chip" onclick="filterAccounts('asset', this)">💎 أصول</button>
-            <button class="filter-chip" onclick="filterAccounts('liability', this)">📋 التزامات</button>
-            <button class="filter-chip" onclick="filterAccounts('equity', this)">👑 حقوق</button>
-            <button class="filter-chip" onclick="filterAccounts('revenue', this)">💰 إيرادات</button>
-            <button class="filter-chip" onclick="filterAccounts('expense', this)">💸 مصروفات</button>
+        <div class="form-group">
+            <label>📝 الاسم *</label>
+            <input type="text" id="accountName" placeholder="اسم الحساب" />
         </div>
-
-        <!-- قائمة الحسابات -->
-        <h3 style="color:#C9A94E;margin:14px 0 10px;font-size:15px;">
-            <i class="fas fa-list"></i> دليل الحسابات
-        </h3>
-        <div id="accountList"></div>
-
-        <!-- القيود اليومية -->
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:20px;">
-            <h3 style="color:#C9A94E;font-size:15px;">
-                <i class="fas fa-history"></i> القيود اليومية
-            </h3>
-            <button class="btn btn-success btn-sm" onclick="showAddJournalDialog()">
-                <i class="fas fa-plus"></i> قيد جديد
-            </button>
+    </div>
+    
+    <div class="form-row">
+        <div class="form-group">
+            <label>🏷️ النوع</label>
+            <select id="accountType">
+                <option value="asset">💎 أصول</option>
+                <option value="liability">📋 التزامات</option>
+                <option value="equity">👑 حقوق ملكية</option>
+                <option value="revenue">💰 إيرادات</option>
+                <option value="expense">💸 مصروفات</option>
+            </select>
         </div>
-        <div id="journalList" style="margin-top:10px;"></div>
+        <div class="form-group">
+            <label>🔗 الحساب الأب</label>
+            <select id="accountParent">
+                <option value="">بدون (رئيسي)</option>
+            </select>
+        </div>
+    </div>
+    
+    <div class="form-group">
+        <label>📄 ملاحظات</label>
+        <input type="text" id="accountNotes" placeholder="اختياري" />
+    </div>
+    
+    <div class="form-actions">
+        <button class="btn btn-primary" onclick="saveAccount()">
+            <i class="fas fa-save"></i> <span id="accountSaveBtnText">إضافة</span>
+        </button>
+        <button class="btn btn-secondary" onclick="resetAccountForm()">
+            <i class="fas fa-times"></i> إلغاء
+        </button>
     </div>
 </div>
 
