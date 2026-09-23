@@ -929,9 +929,9 @@
     <script src="device-lock.js"></script>
     <script src="sw.js"></script>
     <script src="accounts.js"></script>
-    
-    <!-- Service Worker -->
-  <!-- Service Worker -->
+    <script src="notifications.js"></script>
+
+<!-- Service Worker -->
 <script>
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
@@ -939,6 +939,14 @@
                 .then(reg => console.log('✅ SW مسجل:', reg.scope))
                 .catch(err => console.warn('⚠️ SW فشل:', err.message));
         });
+    }
+    
+    // تحقق من وجود مانيفست
+    if (!document.querySelector('link[rel="manifest"]')) {
+        const link = document.createElement('link');
+        link.rel = 'manifest';
+        link.href = './manifest.json';
+        document.head.appendChild(link);
     }
 </script>
 </body>
