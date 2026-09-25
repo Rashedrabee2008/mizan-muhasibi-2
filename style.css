@@ -2502,47 +2502,299 @@ button,
 
 
 /* ============================================================
-   ⏰ تحسين الساعة والتاريخ
+   ⏰ الساعة والتاريخ - تصميم محسّن
    ============================================================ */
 
+/* ═══════════════════════════════════════════════════════════
+   💻 الكمبيوتر (الافتراضي)
+   ═══════════════════════════════════════════════════════════ */
 .top-header .clock {
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
-    background: #0D0D0D !important;
-    border: 1.5px solid #3D3D3D !important;
-    border-radius: 8px !important;
-    padding: 0 8px !important;
+    background: linear-gradient(135deg, #0D0D0D, #1A1A1A) !important;
+    border: 2px solid #C9A94E !important;
+    border-radius: 10px !important;
+    padding: 0 14px !important;
     color: #C9A94E !important;
-    font-size: 10px !important;
+    font-size: 13px !important;
     font-family: 'Courier New', monospace !important;
     direction: ltr !important;
-    height: 30px !important;
-    min-width: 130px !important;
-    font-weight: 700 !important;
+    height: 36px !important;
+    min-width: 190px !important;
+    font-weight: 800 !important;
     white-space: nowrap !important;
-    letter-spacing: 0.3px !important;
+    letter-spacing: 0.5px !important;
+    box-shadow: 0 2px 8px rgba(201, 169, 78, 0.15) !important;
+    transition: all 0.2s !important;
 }
 
-/* على الموبايل - مختصرة */
+.top-header .clock:hover {
+    border-color: #E6A830 !important;
+    box-shadow: 0 2px 12px rgba(201, 169, 78, 0.3) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   📱 تابلت (600-768px)
+   ═══════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+    .top-header .clock {
+        font-size: 11px !important;
+        padding: 0 10px !important;
+        height: 32px !important;
+        min-width: 165px !important;
+        letter-spacing: 0.3px !important;
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   📱 الموبايل - مهم! إظهار الساعة بحجم مناسب
+   ═══════════════════════════════════════════════════════════ */
 @media (max-width: 600px) {
     .top-header .clock {
-        min-width: 100px !important;
-        max-width: 110px !important;
+        display: inline-flex !important;  /* ← إظهار الساعة */
+        font-size: 10px !important;
+        padding: 0 8px !important;
+        height: 30px !important;
+        min-width: 145px !important;
+        max-width: 155px !important;
+        letter-spacing: 0.2px !important;
+        border-width: 1.5px !important;
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   📱 موبايل صغير (400-500px)
+   ═══════════════════════════════════════════════════════════ */
+@media (max-width: 500px) {
+    .top-header .clock {
         font-size: 9px !important;
+        padding: 0 6px !important;
+        height: 28px !important;
+        min-width: 130px !important;
+        max-width: 140px !important;
+        letter-spacing: 0px !important;
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   📱 موبايل صغير جداً (أقل من 400px) - إظهار الساعة
+   ═══════════════════════════════════════════════════════════ */
+@media (max-width: 400px) {
+    .top-header .clock {
+        display: inline-flex !important;  /* ← إظهار الساعة حتى على الصغير! */
+        font-size: 8.5px !important;
         padding: 0 5px !important;
+        height: 26px !important;
+        min-width: 118px !important;
+        max-width: 128px !important;
+        letter-spacing: -0.2px !important;
+        border-width: 1.5px !important;
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   📱 موبايل صغير جداً جداً (أقل من 360px)
+   ═══════════════════════════════════════════════════════════ */
+@media (max-width: 360px) {
+    .top-header .clock {
+        font-size: 8px !important;
+        padding: 0 4px !important;
+        height: 26px !important;
+        min-width: 105px !important;
+        max-width: 115px !important;
+        letter-spacing: -0.3px !important;
+    }
+    
+    /* إخفاء اسم الشركة لإتاحة مساحة للساعة */
+    .top-header .header-text {
+        max-width: 70px !important;
+    }
+    
+    .top-header .header-text h1 {
+        font-size: 13px !important;
+    }
+    
+    .top-header .header-text .sub-title {
+        display: none !important;
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   🎨 تحسين عام للهيدر - ترتيب أفضل
+   ═══════════════════════════════════════════════════════════ */
+.top-header {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 6px !important;
+    padding: 10px 12px !important;
+    background: #1C1C1C !important;
+    border-radius: 14px !important;
+    border: 1px solid #2D2D2D !important;
+    margin-bottom: 14px !important;
+    overflow: hidden !important;
+    flex-wrap: nowrap !important;
+}
+
+/* الشعار */
+.top-header .logo-icon {
+    flex-shrink: 0 !important;
+    width: 38px !important;
+    height: 38px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: linear-gradient(135deg, #C9A94E, #B8953A) !important;
+    border-radius: 10px !important;
+    font-size: 20px !important;
+}
+
+.top-header .logo-icon i {
+    color: #0D0D0D !important;
+}
+
+/* اسم الشركة */
+.top-header .header-text {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1px !important;
+    flex-shrink: 0 !important;
+    max-width: 110px !important;
+}
+
+.top-header .header-text h1 {
+    font-size: 15px !important;
+    font-weight: 900 !important;
+    color: #C9A94E !important;
+    line-height: 1.1 !important;
+    margin: 0 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+.top-header .header-text .sub-title {
+    font-size: 9px !important;
+    color: #A89070 !important;
+    line-height: 1.1 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+/* مجموعة الأزرار */
+.top-header .header-actions {
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    margin-right: auto !important;
+    flex-wrap: nowrap !important;
+    overflow: hidden !important;
+    flex-shrink: 1 !important;
+}
+
+/* توحيد ارتفاع الأزرار */
+.top-header .user-badge,
+.top-header .lock-btn,
+#themeToggleBtn,
+#langToggleBtn {
+    height: 32px !important;
+    min-height: 32px !important;
+    border-radius: 8px !important;
+    flex-shrink: 0 !important;
+}
+
+/* زر المستخدم */
+.top-header .user-badge {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    padding: 0 8px !important;
+    background: #0D0D0D !important;
+    border: 1.5px solid #C9A94E !important;
+    color: #C9A94E !important;
+    font-size: 11px !important;
+    font-weight: 800 !important;
+    max-width: 85px !important;
+    overflow: hidden !important;
+    white-space: nowrap !important;
+}
+
+.top-header .user-badge i {
+    font-size: 14px !important;
+    flex-shrink: 0 !important;
+}
+
+/* زر القفل */
+.top-header .lock-btn {
+    width: 32px !important;
+    min-width: 32px !important;
+    background: #0D0D0D !important;
+    border: 1.5px solid #E06060 !important;
+    color: #E06060 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    font-size: 14px !important;
+    padding: 0 !important;
+    transition: all 0.2s !important;
+}
+
+.top-header .lock-btn:hover {
+    background: #E06060 !important;
+    color: #fff !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   📱 إخفاء العناصر الزائدة على الموبايل
+   ═══════════════════════════════════════════════════════════ */
+@media (max-width: 600px) {
+    /* إخفاء اسم المستخدم (عرض الأيقونة فقط) */
+    .top-header .user-badge span {
+        display: none !important;
+    }
+    
+    .top-header .user-badge {
+        width: 32px !important;
+        min-width: 32px !important;
+        padding: 0 !important;
+        justify-content: center !important;
     }
 }
 
 @media (max-width: 400px) {
-    .top-header .clock {
-        min-width: 90px !important;
-        max-width: 95px !important;
-        font-size: 8px !important;
-        padding: 0 3px !important;
+    .top-header {
+        padding: 8px 10px !important;
+        gap: 4px !important;
+    }
+    
+    .top-header .logo-icon {
+        width: 32px !important;
+        height: 32px !important;
+        font-size: 16px !important;
+    }
+    
+    .top-header .header-text {
+        max-width: 80px !important;
+    }
+    
+    .top-header .header-text h1 {
+        font-size: 13px !important;
+    }
+    
+    .top-header .header-actions {
+        gap: 3px !important;
     }
 }
 
+/* ═══════════════════════════════════════════════════════════
+   🌍 دعم الإنجليزية
+   ═══════════════════════════════════════════════════════════ */
+html[dir="ltr"] .top-header .clock {
+    direction: ltr !important;
+}
 /* ═══════════════════════════════════════════════════════════
    🌍 دعم اللغة الإنجليزية
    ═══════════════════════════════════════════════════════════ */
