@@ -919,6 +919,76 @@
             </div>
         </div>
 
+        <!-- قسم ERP -->
+<div id="page-erp" class="page-container">
+    <div class="page-content">
+        <h2><i class="fas fa-warehouse"></i> إدارة الموارد</h2>
+        
+        <div class="tabs-row">
+            <button class="tab-btn active" onclick="showERPTab('warehouses', this)">📦 مستودعات</button>
+            <button class="tab-btn" onclick="showERPTab('branches', this)">🏢 فروع</button>
+            <button class="tab-btn" onclick="showERPTab('currencies', this)">💱 عملات</button>
+        </div>
+        
+        <!-- المستودعات -->
+        <div id="erpTabWarehouses" class="erp-tab-content">
+            <div class="form-card">
+                <h3 id="warehouseFormTitle">➕ إضافة مستودع جديد</h3>
+                <input type="hidden" id="warehouseId" />
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>اسم المستودع *</label>
+                        <input type="text" id="warehouseName" />
+                    </div>
+                    <div class="form-group">
+                        <label>النوع</label>
+                        <select id="warehouseType">
+                            <option value="main">🏭 رئيسي</option>
+                            <option value="branch">🏪 فرع</option>
+                            <option value="storage" selected>📦 مخزن</option>
+                            <option value="returns">🔄 مرتجعات</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>الموقع</label><input type="text" id="warehouseLocation" /></div>
+                    <div class="form-group"><label>المسؤول</label><input type="text" id="warehouseManager" /></div>
+                </div>
+                <div class="form-actions">
+                    <button class="btn btn-primary" onclick="saveWarehouse()"><i class="fas fa-save"></i> حفظ</button>
+                    <button class="btn btn-secondary" onclick="resetWarehouseForm()"><i class="fas fa-times"></i> إلغاء</button>
+                </div>
+            </div>
+            <div id="warehouseList"></div>
+        </div>
+        
+        <!-- الفروع -->
+        <div id="erpTabBranches" class="erp-tab-content" style="display:none;">
+            <div class="form-card">
+                <h3>➕ إضافة فرع جديد</h3>
+                <input type="hidden" id="branchId" />
+                <div class="form-row">
+                    <div class="form-group"><label>اسم الفرع *</label><input type="text" id="branchName" /></div>
+                    <div class="form-group"><label>الكود</label><input type="text" id="branchCode" /></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>العنوان</label><input type="text" id="branchAddress" /></div>
+                    <div class="form-group"><label>الهاتف</label><input type="text" id="branchPhone" /></div>
+                </div>
+                <div class="form-actions">
+                    <button class="btn btn-primary" onclick="saveBranch()"><i class="fas fa-save"></i> حفظ</button>
+                </div>
+            </div>
+            <div id="branchList"></div>
+        </div>
+        
+        <!-- العملات -->
+        <div id="erpTabCurrencies" class="erp-tab-content" style="display:none;">
+            <div id="currencyList"></div>
+        </div>
+    </div>
+</div>
+
         <!-- ============ شريط التنقل السفلي ============ -->
         <nav class="bottom-nav">
             <button class="nav-item active" data-page="dashboard" onclick="navigateTo('dashboard')"><i class="fas fa-chart-pie"></i><span>الرئيسية</span></button>
@@ -971,8 +1041,9 @@
                 <button class="more-item" onclick="openDevPanel(); toggleMoreMenu();">
     <i class="fas fa-tools" style="color:#E06060;"></i> أدوات المطور
 </button>
-
-                
+                <button class="more-item" onclick="navigateTo('erp'); toggleMoreMenu();">
+    <i class="fas fa-warehouse" style="color:#4A8AB5;"></i> الموارد
+</button>
             </div>
         </div>
 
@@ -998,6 +1069,7 @@
 <script src="accounts.js"></script>
 <script src="notifications.js"></script>
 <script src="language.js"></script>
+<script src="erp.js"></script>
 
 <!-- ⭐ الملفات المهمة -->
 <script src="dev-panel.js"></script>
