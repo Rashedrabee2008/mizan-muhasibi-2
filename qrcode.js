@@ -27,13 +27,15 @@
     // ═══════════════════════════════════════════════════════════
     // 📋 إنشاء نص الفاتورة
     // ═══════════════════════════════════════════════════════════
-    window.generateInvoiceQRText = function(invoice) {
-    // نص مختصر جداً (يدعم حتى 2900 حرف)
+  // ═══════════════════════════════════════════════════════════
+// 📋 إنشاء نص الفاتورة - نسخة مختصرة
+// ═══════════════════════════════════════════════════════════
+window.generateInvoiceQRText = function(invoice) {
     const company = window.companyData || { name: 'الميزان', phone: '' };
     
-    // 🎯 نص مختصر - يعرض فقط الأساسيات
+    // 🎯 نص مختصر جداً (يدعم حتى 2900 حرف)
     const lines = [
-        company.name || 'الميزان',
+        (company.name || 'Mizan'),
         'INV#' + invoice.number,
         'Date: ' + invoice.date,
         'Customer: ' + (invoice.customer || 'Cash'),
@@ -41,18 +43,18 @@
         'Items: ' + (invoice.items || []).length
     ];
 
-    // إضافة أول 3 أصناف فقط
+    // أول 3 أصناف فقط
     (invoice.items || []).slice(0, 3).forEach(function(item, i) {
-        lines.push((i+1) + '. ' + String(item.name).substring(0, 15) + ' x' + item.qty);
+        lines.push((i+1) + '.' + String(item.name).substring(0, 12) + ' x' + item.qty);
     });
 
     if ((invoice.items || []).length > 3) {
-        lines.push('+' + ((invoice.items || []).length - 3) + ' more items');
+        lines.push('+' + ((invoice.items || []).length - 3) + ' more');
     }
 
     lines.push('---');
     if (company.phone) lines.push('Tel: ' + company.phone);
-    lines.push('ID: ' + String(invoice.id).slice(-8));
+    lines.push('ID:' + String(invoice.id).slice(-8));
 
     return lines.join('\n');
 };
@@ -95,14 +97,14 @@
             setTimeout(function() {
                 const container = document.getElementById('qrContainer');
                 if (container && typeof QRCode !== 'undefined') {
-                   new QRCode(container, {
+                  new QRCode(container, {
     text: qrText,
-    width: 200,
-    height: 200,
+    width: 220,
+    height: 220,
     colorDark: '#0D0D0D',
     colorLight: '#FFFFFF',
-    correctLevel: QRCode.CorrectLevel.L  // ← مستوى تصحيح أقل = حجم أصغر
-                    });
+    correctLevel: QRCode.CorrectLevel.L  // ← مستوى أصغر = يدعم نص أقل حجم
+});
                     console.log('✅ تم توليد QR Code');
                 }
             }, 300);
