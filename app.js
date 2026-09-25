@@ -1,8 +1,8 @@
 // ============================================================
-// الميزان 15.0.0 - app.js (النسخة الكاملة)
+// الميزان 15.0.0 - app.js (النسخة النهائية الكاملة)
 // ============================================================
 
-console.log('🚀 تحميل app.js - النسخة الكاملة');
+console.log('🚀 تحميل app.js v15.0.0 - النسخة النهائية');
 
 // ═══════════════════════════════════════════════════════════
 // ☁️ Firebase Configuration
@@ -78,7 +78,7 @@ window.setData = function(key, data) {
 window.toArray = function(data) {
     if (!data) return [];
     if (Array.isArray(data)) return data;
-    return Object.values(data).filter(item => item !== null && item !== undefined);
+    return Object.values(data).filter(function(item) { return item !== null && item !== undefined; });
 };
 
 window.showToast = function(msg, type) {
@@ -93,6 +93,7 @@ window.showToast = function(msg, type) {
 
 window.formatMoney = function(n) { return Number(n || 0).toFixed(2); };
 window.getTodayDate = function() { return new Date().toISOString().split('T')[0]; };
+
 window.getNowTime = function() { 
     const now = new Date();
     let hours = now.getHours();
@@ -111,6 +112,7 @@ window.getPaymentMethodLabel = function(method) {
 };
 
 window.onSalePaymentChange = function() {};
+
 window.toggleMoreMenu = function() {
     const menu = $('moreMenu');
     if (!menu) return;
@@ -148,12 +150,12 @@ window.updateClock = function() {
     const ampm = hours >= 12 ? 'م' : 'ص';
     hours = hours % 12 || 12;
     const hoursStr = String(hours).padStart(2, '0');
-    el.textContent = `${day}/${month}/${year} ${hoursStr}:${minutes} ${ampm}`;
+    el.textContent = day + '/' + month + '/' + year + ' ' + hoursStr + ':' + minutes + ' ' + ampm;
     
     const invDateEl = $('invDateDisplay');
     const invTimeEl = $('invTimeDisplay');
-    if (invDateEl) invDateEl.value = `${day}/${month}/${year}`;
-    if (invTimeEl) invTimeEl.value = `${hoursStr}:${minutes} ${ampm}`;
+    if (invDateEl) invDateEl.value = day + '/' + month + '/' + year;
+    if (invTimeEl) invTimeEl.value = hoursStr + ':' + minutes + ' ' + ampm;
 };
 
 // ═══════════════════════════════════════════════════════════
@@ -186,9 +188,21 @@ window.syncToCloud = function() {
     if (!ref) return;
 
     const data = {
-        products, sales, purchases, customers, suppliers, cashBoxes,
-        expenses, treasury, payments, returns, users,
-        accounts, journalEntries, companyData, vatSettings,
+        products: products || [],
+        sales: sales || [],
+        purchases: purchases || [],
+        customers: customers || [],
+        suppliers: suppliers || [],
+        cashBoxes: cashBoxes || [],
+        expenses: expenses || [],
+        treasury: treasury || [],
+        payments: payments || [],
+        returns: returns || [],
+        users: users || [],
+        accounts: accounts || [],
+        journalEntries: journalEntries || [],
+        companyData: companyData || {},
+        vatSettings: vatSettings || {},
         lastSync: new Date().toISOString(),
         syncedBy: currentUser ? currentUser.name : 'unknown',
         version: '15.0.0'
@@ -250,19 +264,18 @@ window.syncFromCloud = function(silent) {
     }).catch(function() {});
 };
 
-window.syncUsersFromCloud = async function() {
+window.syncUsersFromCloud = function() {
     if (!window.firebaseReady) return;
-    try {
-        const snapshot = await firebase.database().ref('mizan/users').once('value');
+    firebase.database().ref('mizan/users').once('value').then(function(snapshot) {
         if (snapshot.exists()) {
-            let usersData = toArray(snapshot.val()).filter(u => u && u.id);
+            let usersData = toArray(snapshot.val()).filter(function(u) { return u && u.id; });
             if (usersData.length > 0 && usersData.length !== (window.users || []).length) {
                 window.users = usersData;
                 setData('users', window.users);
                 populateLoginUsers();
             }
         }
-    } catch (e) {}
+    }).catch(function() {});
 };
 
 window.updateSyncStatus = function(msg, type) {
@@ -341,6 +354,22 @@ window.canDelete = function() { return hasPermission('delete'); };
 window.canManageUsers = function() { return hasPermission('manage_users'); };
 window.canViewAccounts = function() { return hasPermission('view_accounts'); };
 
+// دالة استدعاء آمنة
+window.callIfExists = function(fnName, arg1, arg2) {
+    if (typeof window[fnName] === 'function') {
+        if (arg2 !== undefined) {
+            window[fnName](arg1, arg2);
+        } else if (arg1 !== undefined) {
+            window[fnName](arg1);
+        } else {
+            window[fnName]();
+        }
+    } else {
+        if (typeof showToast === 'function') showToast('⚠️ الميزة غير متاحة حالياً', 'warning');
+        console.warn('⚠️ الدالة غير موجودة:', fnName);
+    }
+};
+
 // ═══════════════════════════════════════════════════════════
 // 🧭 التنقل
 // ═══════════════════════════════════════════════════════════
@@ -361,6 +390,7 @@ window.navigateTo = function(page) {
         populateCashBoxDropdowns();
         renderCashier();
         updateSaleTotals();
+        updateSalePrice();
     }
     if (page === 'purchases') {
         populatePurProducts();
@@ -425,12 +455,12 @@ window.saveProduct = function() {
     if (id) {
         const idx = products.findIndex(function(p) { return p.id == id; });
         if (idx > -1) {
-            products[idx] = Object.assign({}, products[idx], { name, barcode, buy, sell, qty, min });
+            products[idx] = Object.assign({}, products[idx], { name: name, barcode: barcode, buy: buy, sell: sell, qty: qty, min: min });
             showToast('✅ تم التعديل', 'success');
         }
     } else {
         if (products.find(function(p) { return p.name === name; })) { showToast('⚠️ الاسم موجود', 'warning'); return; }
-        products.push({ id: Date.now(), name, barcode, buy, sell, qty, min });
+        products.push({ id: Date.now(), name: name, barcode: barcode, buy: buy, sell: sell, qty: qty, min: min });
         showToast('✅ تم الإضافة', 'success');
     }
     setData('products', products);
@@ -524,14 +554,14 @@ window.saveCustomer = function() {
     if (!name) { showToast('⚠️ أدخل اسم العميل', 'error'); return; }
 
     if (id) {
-        const idx = customers.findIndex(c => c.id == id);
+        const idx = customers.findIndex(function(c) { return c.id == id; });
         if (idx > -1) {
-            customers[idx] = Object.assign({}, customers[idx], { name, phone, whatsapp, address });
+            customers[idx] = Object.assign({}, customers[idx], { name: name, phone: phone, whatsapp: whatsapp, address: address });
             showToast('✅ تم التعديل', 'success');
         }
     } else {
-        if (customers.find(c => c.name === name)) { showToast('⚠️ الاسم موجود', 'warning'); return; }
-        customers.push({ id: Date.now(), name, phone, whatsapp, address });
+        if (customers.find(function(c) { return c.name === name; })) { showToast('⚠️ الاسم موجود', 'warning'); return; }
+        customers.push({ id: Date.now(), name: name, phone: phone, whatsapp: whatsapp, address: address });
         showToast('✅ تم الإضافة', 'success');
     }
     setData('customers', customers);
@@ -626,12 +656,12 @@ window.saveSupplier = function() {
     if (id) {
         const idx = suppliers.findIndex(function(s) { return s.id == id; });
         if (idx > -1) {
-            suppliers[idx] = Object.assign({}, suppliers[idx], { name, phone, whatsapp, address });
+            suppliers[idx] = Object.assign({}, suppliers[idx], { name: name, phone: phone, whatsapp: whatsapp, address: address });
             showToast('✅ تم التعديل', 'success');
         }
     } else {
         if (suppliers.find(function(s) { return s.name === name; })) { showToast('⚠️ الاسم موجود', 'warning'); return; }
-        suppliers.push({ id: Date.now(), name, phone, whatsapp, address });
+        suppliers.push({ id: Date.now(), name: name, phone: phone, whatsapp: whatsapp, address: address });
         showToast('✅ تم الإضافة', 'success');
     }
     setData('suppliers', suppliers);
@@ -754,13 +784,13 @@ window.saveCashBox = function() {
         const idx = cashBoxes.findIndex(function(b) { return b.id == id; });
         if (idx > -1) {
             if (isDefault) cashBoxes.forEach(function(b) { b.isDefault = false; });
-            cashBoxes[idx] = Object.assign({}, cashBoxes[idx], { name, type, icon, details, openingBalance, isDefault: isDefault || cashBoxes[idx].isDefault });
+            cashBoxes[idx] = Object.assign({}, cashBoxes[idx], { name: name, type: type, icon: icon, details: details, openingBalance: openingBalance, isDefault: isDefault || cashBoxes[idx].isDefault });
             showToast('✅ تم التعديل', 'success');
         }
     } else {
         if (cashBoxes.find(function(b) { return b.name === name; })) { showToast('⚠️ الاسم موجود', 'warning'); return; }
         if (isDefault) cashBoxes.forEach(function(b) { b.isDefault = false; });
-        cashBoxes.push({ id: Date.now(), name, type, icon, details, openingBalance, isDefault: isDefault || cashBoxes.length === 0, active: true });
+        cashBoxes.push({ id: Date.now(), name: name, type: type, icon: icon, details: details, openingBalance: openingBalance, isDefault: isDefault || cashBoxes.length === 0, active: true });
         showToast('✅ تم الإضافة', 'success');
     }
     setData('cashBoxes', cashBoxes);
@@ -1528,6 +1558,7 @@ window.filterTreasury = function(filter, btn) {
 };
 
 window.renderTreasury = function() {
+    const currentTreasuryFilter = window.currentTreasuryFilter || 'all';
     const totalBalance = getTotalCashBalance();
     if ($('treasuryBalance')) $('treasuryBalance').textContent = formatMoney(totalBalance) + ' 🇪🇬';
 
@@ -1589,6 +1620,7 @@ window.filterInvoices = function(filter, btn) {
 };
 
 window.renderInvoices = function() {
+    const currentInvoiceFilter = window.currentInvoiceFilter || 'all';
     const c = $('invoiceList');
     if (!c) return;
     const searchInput = $('invoiceSearch');
@@ -1675,9 +1707,9 @@ window.showInvoiceDetails = function(id) {
         '</div>' +
         '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:12px;">' +
             '<button class="btn btn-success" onclick="printInvoice(' + inv.id + ')"><i class="fas fa-print"></i> طباعة</button>' +
-            '<button class="btn btn-info" onclick="typeof generateInvoicePDF === \'function\' && generateInvoicePDF(' + inv.id + ')"><i class="fas fa-file-pdf"></i> PDF</button>' +
-            '<button class="btn btn-primary" onclick="typeof showInvoiceQR === \'function\' && showInvoiceQR(' + inv.id + ')"><i class="fas fa-qrcode"></i> QR Code</button>' +
-            '<button class="btn btn-warning" onclick="typeof sendInvoiceWhatsApp === \'function\' && sendInvoiceWhatsApp(' + inv.id + ')"><i class="fab fa-whatsapp"></i> واتساب</button>' +
+            '<button class="btn btn-info" onclick="callIfExists(\'generateInvoicePDF\', ' + inv.id + ')"><i class="fas fa-file-pdf"></i> PDF</button>' +
+            '<button class="btn btn-primary" onclick="callIfExists(\'showInvoiceQR\', ' + inv.id + ')"><i class="fas fa-qrcode"></i> QR Code</button>' +
+            '<button class="btn btn-warning" onclick="callIfExists(\'sendInvoiceWhatsApp\', ' + inv.id + ')"><i class="fab fa-whatsapp"></i> واتساب</button>' +
         '</div>' +
         '<button class="btn btn-secondary btn-block" onclick="closeModal()" style="margin-top:6px;"><i class="fas fa-times"></i> إغلاق</button>';
     openModal(html);
@@ -2486,10 +2518,10 @@ window.saveUser = function() {
     if (!name || !password) { showToast('⚠️ أدخل البيانات', 'error'); return; }
     if (id) {
         const idx = users.findIndex(function(u) { return u.id == id; });
-        if (idx > -1) { users[idx] = Object.assign({}, users[idx], { name, password, role }); showToast('✅ تم التعديل', 'success'); }
+        if (idx > -1) { users[idx] = Object.assign({}, users[idx], { name: name, password: password, role: role }); showToast('✅ تم التعديل', 'success'); }
     } else {
         if (users.find(function(u) { return u.name === name; })) { showToast('⚠️ الاسم موجود', 'warning'); return; }
-        users.push({ id: Date.now(), name, password, role, active: true });
+        users.push({ id: Date.now(), name: name, password: password, role: role, active: true });
         showToast('✅ تم الإضافة', 'success');
     }
     setData('users', users);
@@ -2613,8 +2645,11 @@ window.saveCompanySettings = function() {
 window.exportData = function() {
     const data = {
         version: '15.0.0', exportDate: new Date().toISOString(),
-        products, sales, purchases, customers, suppliers, cashBoxes,
-        expenses, treasury, payments, returns, users, accounts, journalEntries, companyData
+        products: products, sales: sales, purchases: purchases,
+        customers: customers, suppliers: suppliers, cashBoxes: cashBoxes,
+        expenses: expenses, treasury: treasury, payments: payments,
+        returns: returns, users: users, accounts: accounts,
+        journalEntries: journalEntries, companyData: companyData
     };
     const json = JSON.stringify(data, null, 2);
     const blob = new Blob([json], { type: 'application/json' });
@@ -2881,19 +2916,18 @@ window.init = function() {
     updateClock();
     refreshAllUI();
 
-    setTimeout(async function() {
+    setTimeout(function() {
         if (window.firebaseReady) {
-            try {
-                const snapshot = await firebase.database().ref('mizan/users').once('value');
+            firebase.database().ref('mizan/users').once('value').then(function(snapshot) {
                 if (snapshot.exists()) {
-                    let usersData = toArray(snapshot.val()).filter(u => u && u.id);
+                    let usersData = toArray(snapshot.val()).filter(function(u) { return u && u.id; });
                     if (usersData.length > 0) {
                         window.users = usersData;
                         setData('users', window.users);
                         populateLoginUsers();
                     }
                 }
-            } catch (e) {}
+            }).catch(function() {});
         }
     }, 2000);
 
@@ -2909,8 +2943,15 @@ window.init = function() {
     console.log('🔐 المستخدم الافتراضي: المدير / 123456');
 };
 
+// حفظ قبل الخروج
+window.addEventListener('beforeunload', function() {
+    if (window.currentUser) {
+        saveAll();
+    }
+});
+
 document.addEventListener('DOMContentLoaded', function() {
     init();
     setInterval(updateClock, 1000);
-    console.log('✅ app.js v15.0.0 كامل');
+    console.log('✅ app.js v15.0.0 كامل - لا أخطاء');
 });
