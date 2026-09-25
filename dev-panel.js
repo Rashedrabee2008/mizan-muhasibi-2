@@ -484,3 +484,40 @@
 
     console.log('✅ dev-panel.js جاهز');
 })();
+
+// ═══════════════════════════════════════════════════════════
+// 🔧 إصلاحات إضافية
+// ═══════════════════════════════════════════════════════════
+
+// دالة toggle التفعيل
+window.devToggleActivation = window.devToggleActivation || async function(deviceId, activate) {
+    try {
+        const ref = firebase.database().ref('mizan_licenses/mizan_license/devices');
+        const snapshot = await ref.once('value');
+        let devices = snapshot.val() || [];
+        if (!Array.isArray(devices)) devices = Object.values(devices);
+        
+        devices = devices.map(d => {
+            if (d && d.id === deviceId) {
+                d.activated = activate;
+            }
+            return d;
+        });
+        
+        await firebase.database().ref('mizan_licenses/mizan_license/devices').set(devices);
+        alert(activate ? '✅ تم التفعيل' : '⏸️ تم التعطيل');
+        if (typeof devTabDevices === 'function') devTabDevices();
+    } catch (e) {
+        alert('❌ ' + e.message);
+    }
+};
+
+// دالة توليد الكود
+window.devGenerateCode = window.devGenerateCode || async function(deviceId) {
+    if (!deviceId) return 'MIZAN-' + Math.random().toString(36).substring(2, 10).toUpperCase();
+    const short = deviceId.substring(0, 8).toUpperCase();
+    const hash = btoa(deviceId + 'MIZAN2025').substring(0, 12).replace(/[^A-Z0-9]/g, '');
+    return 'MIZAN-' + short.substring(0, 4) + '-' + hash.substring(0, 4) + '-' + hash.substring(4, 8);
+};
+
+console.log('✅ dev-panel.js - الإصلاحات الإضافية محمّلة');
