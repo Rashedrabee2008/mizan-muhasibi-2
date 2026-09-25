@@ -24,18 +24,15 @@
         });
     }
 
-    // ═══════════════════════════════════════════════════════════
-    // 📋 إنشاء نص الفاتورة
-    // ═══════════════════════════════════════════════════════════
   // ═══════════════════════════════════════════════════════════
 // 📋 إنشاء نص الفاتورة - نسخة مختصرة
 // ═══════════════════════════════════════════════════════════
 window.generateInvoiceQRText = function(invoice) {
     const company = window.companyData || { name: 'الميزان', phone: '' };
     
-    // 🎯 نص مختصر جداً (يدعم حتى 2900 حرف)
+    // نص مختصر لتجنب code length overflow
     const lines = [
-        (company.name || 'Mizan'),
+        company.name || 'Mizan',
         'INV#' + invoice.number,
         'Date: ' + invoice.date,
         'Customer: ' + (invoice.customer || 'Cash'),
@@ -43,7 +40,6 @@ window.generateInvoiceQRText = function(invoice) {
         'Items: ' + (invoice.items || []).length
     ];
 
-    // أول 3 أصناف فقط
     (invoice.items || []).slice(0, 3).forEach(function(item, i) {
         lines.push((i+1) + '.' + String(item.name).substring(0, 12) + ' x' + item.qty);
     });
