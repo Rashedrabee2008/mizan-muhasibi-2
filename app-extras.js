@@ -1,33 +1,24 @@
 // ============================================================
-// الميزان 14.0.0 - app-extras.js (النسخة المُصلحة الكاملة)
+// الميزان 15.0.0 - app-extras.js
 // ============================================================
 
-console.log('🚀 تحميل app-extras.js - النسخة المُصلحة');
+console.log('🚀 تحميل app-extras.js');
 
 // ═══════════════════════════════════════════════════════════
-// 🔥 إلغاء تسجيل Service Worker القديم
+// 🔥 إلغاء Service Worker القديم
 // ═══════════════════════════════════════════════════════════
 (function unregisterServiceWorkers() {
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.getRegistrations().then(function(registrations) {
-            if (registrations.length > 0) {
-                console.log('🗑️ وجدت ' + registrations.length + ' Service Worker قديم - إلغاء...');
-                registrations.forEach(function(reg) {
-                    reg.unregister().then(function() {
-                        console.log('✅ تم إلغاء SW:', reg.scope);
-                    });
-                });
-            } else {
-                console.log('ℹ️ لا توجد Service Workers مسجلة');
-            }
-        }).catch(function(err) {
-            console.log('ℹ️ خطأ في قراءة SW:', err.message);
-        });
+            registrations.forEach(function(reg) {
+                reg.unregister();
+            });
+        }).catch(function() {});
     }
 })();
 
 // ═══════════════════════════════════════════════════════════
-// 1. 🎨 الوضع الفاتح (Light Mode)
+// 1. 🎨 الوضع الفاتح
 // ═══════════════════════════════════════════════════════════
 (function initThemeToggle() {
     function addThemeToggle() {
@@ -39,9 +30,7 @@ console.log('🚀 تحميل app-extras.js - النسخة المُصلحة');
         btn.title = 'تبديل الوضع';
         btn.innerHTML = getThemeIcon();
         btn.onclick = toggleTheme;
-        btn.style.cssText = 'background:#0D0D0D;border:2px solid #3D3D3D;color:#C9A94E;' +
-            'font-size:12px;cursor:pointer;padding:4px 6px;border-radius:6px;' +
-            'height:28px;min-width:28px;font-weight:900;';
+        btn.style.cssText = 'background:#0D0D0D;border:2px solid #3D3D3D;color:#C9A94E;font-size:12px;cursor:pointer;padding:4px 6px;border-radius:6px;height:28px;min-width:28px;font-weight:900;';
         header.insertBefore(btn, header.firstChild);
     }
 
@@ -55,13 +44,9 @@ console.log('🚀 تحميل app-extras.js - النسخة المُصلحة');
         const newTheme = current === 'dark' ? 'light' : 'dark';
         localStorage.setItem('mizan_theme', newTheme);
         applyTheme(newTheme);
-        
         const btn = document.getElementById('themeToggleBtn');
         if (btn) btn.innerHTML = newTheme === 'dark' ? '☀️' : '🌙';
-        
-        if (typeof showToast === 'function') {
-            showToast(newTheme === 'dark' ? '🌙 الوضع الداكن' : '☀️ الوضع الفاتح', 'info');
-        }
+        if (typeof showToast === 'function') showToast(newTheme === 'dark' ? '🌙 الوضع الداكن' : '☀️ الوضع الفاتح', 'info');
     };
 
     window.applyTheme = function(theme) {
@@ -79,235 +64,10 @@ console.log('🚀 تحميل app-extras.js - النسخة المُصلحة');
     } else {
         setTimeout(addThemeToggle, 1500);
     }
-
-    console.log('✅ الوضع الفاتح: جاهز');
 })();
 
 // ═══════════════════════════════════════════════════════════
-// 2. 🖼️ شعار الشركة
-// ═══════════════════════════════════════════════════════════
-(function initCompanyLogo() {
-    function addLogo() {
-        if (typeof companyData === 'undefined' || !companyData.logo) return;
-        
-        const logoIcon = document.querySelector('.top-header .logo-icon');
-        if (!logoIcon || logoIcon.querySelector('img')) return;
-        
-        logoIcon.innerHTML = '<img src="' + companyData.logo + '" style="max-width:100%;max-height:100%;border-radius:6px;" alt="logo">';
-    }
-
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function() { setTimeout(addLogo, 2000); });
-    } else {
-        setTimeout(addLogo, 2000);
-    }
-
-    console.log('✅ شعار الشركة: جاهز');
-})();
-
-// ═══════════════════════════════════════════════════════════
-// 3. 🎁 نظام نقاط العملاء (مُصلح)
-// ═══════════════════════════════════════════════════════════
-(function initLoyaltyPoints() {
-    const POINTS_PER_EGP = 0.01;
-
-    window.getCustomerPoints = function(customerName) {
-        const points = getData('customer_points', {});
-        return points[customerName] || 0;
-    };
-
-    window.addCustomerPoints = function(customerName, points) {
-        if (!customerName || customerName === 'عميل نقدي') return;
-        const allPoints = getData('customer_points', {});
-        allPoints[customerName] = (allPoints[customerName] || 0) + points;
-        setData('customer_points', allPoints);
-    };
-
-    // ✅ نسخة مُصلحة: نحفظ النسخة الأصلية ونضيف النقاط بعد الحفظ
-    function wrapSaveSale() {
-        if (typeof window.saveSale !== 'function' || window.saveSale._isWrapped) return;
-        
-        const originalSaveSale = window.saveSale;
-        
-        window.saveSale = function() {
-            const customer = document.getElementById('saleCustomer') ? document.getElementById('saleCustomer').value : '';
-            const salesBefore = (typeof sales !== 'undefined') ? sales.length : 0;
-            
-            const result = originalSaveSale.apply(this, arguments);
-            
-            // بعد الحفظ، نتحقق من إضافة فاتورة جديدة
-            if (customer && customer !== 'عميل نقدي' && typeof sales !== 'undefined' && sales.length > salesBefore) {
-                const lastSale = sales[sales.length - 1];
-                if (lastSale && lastSale.customer === customer) {
-                    const points = Math.floor(lastSale.total * POINTS_PER_EGP);
-                    if (points > 0) {
-                        addCustomerPoints(customer, points);
-                        if (typeof showToast === 'function') {
-                            setTimeout(function() {
-                                showToast('🎁 حصل ' + customer + ' على ' + points + ' نقطة', 'success');
-                            }, 500);
-                        }
-                    }
-                }
-            }
-            return result;
-        };
-        
-        window.saveSale._isWrapped = true;
-    }
-
-    // ننتظر حتى يتم تحميل app.js
-    setTimeout(wrapSaveSale, 500);
-
-    console.log('✅ نظام النقاط: جاهز');
-})();
-
-// ═══════════════════════════════════════════════════════════
-// 📊 Quick Summary - ملخص الأداء
-// ═══════════════════════════════════════════════════════════
-window.updateQuickSummary = function() {
-    // 1. أفضل يوم مبيعات (آخر 7 أيام)
-    const days = {};
-    const today = new Date();
-    
-    for (let i = 6; i >= 0; i--) {
-        const d = new Date();
-        d.setDate(d.getDate() - i);
-        const dateStr = d.toISOString().split('T')[0];
-        days[dateStr] = 0;
-    }
-    
-    (window.sales || []).forEach(function(s) {
-        if (days[s.date] !== undefined) {
-            days[s.date] += (s.total || 0);
-        }
-    });
-    
-    let bestDay = '';
-    let bestDayAmount = 0;
-    Object.keys(days).forEach(function(date) {
-        if (days[date] > bestDayAmount) {
-            bestDayAmount = days[date];
-            bestDay = date;
-        }
-    });
-    
-    const bestDayEl = document.getElementById('bestDayName');
-    const bestDaySalesEl = document.getElementById('bestDaySales');
-    
-    if (bestDayEl && bestDay && bestDayAmount > 0) {
-        const d = new Date(bestDay);
-        const dayNames = ['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
-        bestDayEl.textContent = dayNames[d.getDay()] + ' ' + d.getDate() + '/' + (d.getMonth() + 1);
-        bestDaySalesEl.textContent = window.formatMoney(bestDayAmount);
-    } else if (bestDayEl) {
-        bestDayEl.textContent = 'لا توجد بيانات';
-        bestDaySalesEl.textContent = '0.00';
-    }
-    
-    // 2. متوسط الفاتورة
-    const totalSales = (window.sales || []).reduce(function(s, x) { return s + (x.total || 0); }, 0);
-    const countSales = (window.sales || []).length;
-    const avg = countSales > 0 ? totalSales / countSales : 0;
-    
-    const avgEl = document.getElementById('avgInvoice');
-    if (avgEl) avgEl.textContent = window.formatMoney(avg);
-    
-    // 3. أفضل عميل
-    const customerStats = {};
-    (window.sales || []).forEach(function(s) {
-        const c = s.customer || 'عميل نقدي';
-        if (c === 'عميل نقدي') return;
-        if (!customerStats[c]) customerStats[c] = 0;
-        customerStats[c] += (s.total || 0);
-    });
-    
-    let bestCustomer = '';
-    let bestCustomerAmount = 0;
-    Object.keys(customerStats).forEach(function(c) {
-        if (customerStats[c] > bestCustomerAmount) {
-            bestCustomerAmount = customerStats[c];
-            bestCustomer = c;
-        }
-    });
-    
-    const custNameEl = document.getElementById('bestCustomerName');
-    const custTotalEl = document.getElementById('bestCustomerTotal');
-    if (custNameEl) {
-        custNameEl.textContent = bestCustomer || 'لا يوجد';
-        custTotalEl.textContent = window.formatMoney(bestCustomerAmount);
-    }
-    
-    // 4. أفضل منتج
-    const productStats = {};
-    (window.sales || []).forEach(function(s) {
-        (s.items || []).forEach(function(it) {
-            if (!productStats[it.name]) productStats[it.name] = 0;
-            productStats[it.name] += (it.qty || 0);
-        });
-    });
-    
-    let bestProduct = '';
-    let bestProductQty = 0;
-    Object.keys(productStats).forEach(function(p) {
-        if (productStats[p] > bestProductQty) {
-            bestProductQty = productStats[p];
-            bestProduct = p;
-        }
-    });
-    
-    const prodNameEl = document.getElementById('bestProductName');
-    const prodQtyEl = document.getElementById('bestProductQty');
-    if (prodNameEl) {
-        prodNameEl.textContent = bestProduct || 'لا يوجد';
-        prodQtyEl.textContent = bestProductQty;
-    }
-    
-    console.log('✅ تم تحديث Quick Summary');
-};
-
-// استدعاء عند تحميل الصفحة
-setTimeout(function() {
-    if (typeof updateQuickSummary === 'function') {
-        updateQuickSummary();
-    }
-}, 3000);
-
-// استدعاء عند عرض لوحة التحكم
-const originalNavigateTo = window.navigateTo;
-if (originalNavigateTo && !originalNavigateTo._withSummary) {
-    window.navigateTo = function(page) {
-        originalNavigateTo.apply(this, arguments);
-        if (page === 'dashboard' && typeof updateQuickSummary === 'function') {
-            setTimeout(updateQuickSummary, 200);
-        }
-    };
-    window.navigateTo._withSummary = true;
-}
-// ═══════════════════════════════════════════════════════════
-// 5. 🔔 الإشعارات
-// ═══════════════════════════════════════════════════════════
-(function initNotifications() {
-    if (!('Notification' in window)) return;
-
-    window.sendNotification = function(title, body) {
-        if (Notification.permission !== 'granted') return;
-        try {
-            new Notification(title, { body: body, tag: 'mizan' });
-        } catch (e) {}
-    };
-
-    setTimeout(function() {
-        if (Notification.permission === 'default') {
-            Notification.requestPermission();
-        }
-    }, 10000);
-
-    console.log('✅ الإشعارات: جاهزة');
-})();
-
-// ═══════════════════════════════════════════════════════════
-// 6. 🌍 الترجمة (زر فقط)
+// 2. 🌍 الترجمة
 // ═══════════════════════════════════════════════════════════
 (function initLanguageToggle() {
     window.currentLang = localStorage.getItem('mizan_lang') || 'ar';
@@ -315,22 +75,18 @@ if (originalNavigateTo && !originalNavigateTo._withSummary) {
     function addLangToggle() {
         const header = document.querySelector('.header-actions');
         if (!header || document.getElementById('langToggleBtn')) return;
-        
+
         const btn = document.createElement('button');
         btn.id = 'langToggleBtn';
         btn.title = 'تغيير اللغة';
-        btn.innerHTML = window.currentLang === 'ar' ? 'EN' : 'AR';
-        btn.style.cssText = 'background:#0D0D0D;border:2px solid #3D3D3D;color:#C9A94E;' +
-            'font-size:11px;cursor:pointer;padding:4px 6px;border-radius:6px;' +
-            'height:28px;min-width:28px;font-weight:900;';
+        btn.innerHTML = window.currentLang === 'ar' ? 'EN' : 'ع';
+        btn.style.cssText = 'background:#0D0D0D;border:2px solid #3D3D3D;color:#C9A94E;font-size:11px;cursor:pointer;padding:4px 6px;border-radius:6px;height:28px;min-width:28px;font-weight:900;';
         btn.onclick = function() {
             window.currentLang = window.currentLang === 'ar' ? 'en' : 'ar';
             localStorage.setItem('mizan_lang', window.currentLang);
-            btn.innerHTML = window.currentLang === 'ar' ? 'EN' : 'AR';
-            
-            if (typeof showToast === 'function') {
-                showToast(window.currentLang === 'en' ? '🌍 English mode (Coming soon)' : '🌍 الوضع العربي', 'info');
-            }
+            btn.innerHTML = window.currentLang === 'ar' ? 'EN' : 'ع';
+            document.documentElement.setAttribute('dir', window.currentLang === 'ar' ? 'rtl' : 'ltr');
+            if (typeof showToast === 'function') showToast(window.currentLang === 'en' ? '🌍 English mode' : '🌍 الوضع العربي', 'info');
         };
         header.insertBefore(btn, header.firstChild);
     }
@@ -340,57 +96,10 @@ if (originalNavigateTo && !originalNavigateTo._withSummary) {
     } else {
         setTimeout(addLangToggle, 1800);
     }
-
-    console.log('✅ الترجمة: جاهزة');
 })();
 
 // ═══════════════════════════════════════════════════════════
-// 7. 💾 النسخ الاحتياطي
-// ═══════════════════════════════════════════════════════════
-(function initAutoBackup() {
-    window.autoBackup = function() {
-        try {
-            const data = {
-                version: '14.0.0',
-                backupDate: new Date().toISOString(),
-                products: products, sales: sales, purchases: purchases,
-                customers: customers, suppliers: suppliers, cashBoxes: cashBoxes,
-                expenses: expenses, treasury: treasury, payments: payments,
-                returns: returns, users: users, companyData: companyData
-            };
-            const json = JSON.stringify(data);
-            setData('last_backup', {
-                date: new Date().toISOString(),
-                size: (json.length / 1024).toFixed(2) + ' KB'
-            });
-            console.log('✅ تم إنشاء نسخة احتياطية');
-            return true;
-        } catch (e) {
-            return false;
-        }
-    };
-
-    setInterval(function() {
-        if (window.currentUser) autoBackup();
-    }, 6 * 60 * 60 * 1000);
-
-    window.showBackupStatus = function() {
-        const lastBackup = getData('last_backup', null);
-        if (lastBackup) {
-            const date = new Date(lastBackup.date).toLocaleString('ar-EG');
-            if (typeof showToast === 'function') {
-                showToast('💾 آخر نسخة: ' + date + ' (' + lastBackup.size + ')', 'info');
-            }
-        } else {
-            if (typeof showToast === 'function') showToast('ℹ️ لا توجد نسخة احتياطية', 'info');
-        }
-    };
-
-    console.log('✅ النسخ الاحتياطي: جاهز');
-})();
-
-// ═══════════════════════════════════════════════════════════
-// 8. ⌨️ اختصارات لوحة المفاتيح
+// 3. ⌨️ اختصارات لوحة المفاتيح
 // ═══════════════════════════════════════════════════════════
 (function initKeyboardShortcuts() {
     document.addEventListener('keydown', function(e) {
@@ -400,11 +109,10 @@ if (originalNavigateTo && !originalNavigateTo._withSummary) {
             }
             return;
         }
-        
+
         if (e.ctrlKey && !e.shiftKey && !e.altKey) {
             const key = e.key;
-            const map = { '1': 'dashboard', '2': 'inventory', '3': 'cashier', '4': 'purchases',
-                          '5': 'customers', '6': 'suppliers', '7': 'invoices', '8': 'reports', '9': 'settings' };
+            const map = { '1': 'dashboard', '2': 'inventory', '3': 'cashier', '4': 'purchases', '5': 'customers', '6': 'suppliers', '7': 'invoices', '8': 'reports', '9': 'settings' };
             if (map[key]) {
                 e.preventDefault();
                 if (typeof navigateTo === 'function') navigateTo(map[key]);
@@ -417,7 +125,7 @@ if (originalNavigateTo && !originalNavigateTo._withSummary) {
                 }
             }
         }
-        
+
         if (e.key === 'F1') {
             e.preventDefault();
             showKeyboardShortcuts();
@@ -434,54 +142,12 @@ if (originalNavigateTo && !originalNavigateTo._withSummary) {
                 '<div><strong style="color:#C9A94E;">Esc</strong> → إغلاق النوافذ</div>' +
             '</div>' +
             '<button class="btn btn-secondary btn-block" onclick="closeModal()" style="margin-top:12px;">إغلاق</button>';
-        
         if (typeof openModal === 'function') openModal(html);
     };
-
-    console.log('✅ اختصارات لوحة المفاتيح: جاهزة');
 })();
 
 // ═══════════════════════════════════════════════════════════
-// 9. 💰 اقتراح الأسعار
-// ═══════════════════════════════════════════════════════════
-(function initSmartPricing() {
-    window.suggestPrice = function(productId) {
-        if (typeof products === 'undefined') return null;
-        const product = products.find(function(p) { return p.id == productId; });
-        if (!product) return null;
-
-        let totalSold = 0, totalRevenue = 0;
-        sales.forEach(function(s) {
-            (s.items || []).forEach(function(it) {
-                if (it.productId == productId) {
-                    totalSold += it.qty;
-                    totalRevenue += it.total;
-                }
-            });
-        });
-
-        const avgPrice = totalSold > 0 ? totalRevenue / totalSold : product.sell;
-        const costMargin = (product.sell - product.buy) / product.buy * 100;
-        
-        let suggestedPrice = product.sell;
-        if (costMargin < 20) suggestedPrice = product.buy * 1.3;
-        else if (costMargin > 100) suggestedPrice = product.buy * 1.8;
-        else suggestedPrice = product.buy * 1.5;
-
-        return {
-            current: product.sell,
-            suggested: Math.round(suggestedPrice * 100) / 100,
-            avgSold: Math.round(avgPrice * 100) / 100,
-            margin: Math.round(costMargin),
-            soldQty: totalSold
-        };
-    };
-
-    console.log('✅ اقتراح الأسعار: جاهز');
-})();
-
-// ═══════════════════════════════════════════════════════════
-// 10. ⭐ عملاء VIP
+// 4. ⭐ عملاء VIP
 // ═══════════════════════════════════════════════════════════
 (function initVIPCustomers() {
     window.getVIPCustomers = function() {
@@ -493,7 +159,6 @@ if (originalNavigateTo && !originalNavigateTo._withSummary) {
             customerStats[s.customer].total += s.total || 0;
             customerStats[s.customer].count++;
         });
-
         const list = Object.values(customerStats).sort(function(a, b) { return b.total - a.total; });
         const topCount = Math.max(1, Math.ceil(list.length * 0.2));
         return list.slice(0, topCount);
@@ -502,7 +167,6 @@ if (originalNavigateTo && !originalNavigateTo._withSummary) {
     window.showVIPCustomers = function() {
         const vips = getVIPCustomers();
         let html = '<button class="modal-close" onclick="closeModal()">&times;</button><h3>⭐ عملاء VIP</h3>';
-        
         if (vips.length === 0) {
             html += '<div class="empty-state"><i class="fas fa-star"></i><span>لا توجد بيانات</span></div>';
         } else {
@@ -520,119 +184,135 @@ if (originalNavigateTo && !originalNavigateTo._withSummary) {
             html += '</div>';
         }
         html += '<button class="btn btn-secondary btn-block" onclick="closeModal()" style="margin-top:12px;">إغلاق</button>';
-        
         if (typeof openModal === 'function') openModal(html);
     };
-
-    console.log('✅ عملاء VIP: جاهز');
 })();
 
 // ═══════════════════════════════════════════════════════════
-// 11. 📋 تصدير Excel
+// 5. 📊 ملخص الأداء - Performance Summary
 // ═══════════════════════════════════════════════════════════
-(function initExcelExport() {
-    window.exportToExcel = function(type) {
-        let csv = '\uFEFF';
-        const filename = 'mizan_' + type + '_' + new Date().toISOString().split('T')[0] + '.csv';
-        
-        if (type === 'products' && typeof products !== 'undefined') {
-            csv += 'المنتج,الباركود,سعر الشراء,سعر البيع,الكمية,الحد الأدنى\n';
-            products.forEach(function(p) {
-                csv += '"' + (p.name || '') + '","' + (p.barcode || '') + '",' + p.buy + ',' + p.sell + ',' + p.qty + ',' + (p.min || 5) + '\n';
+(function initPerformanceSummary() {
+    window.updateQuickSummary = function() {
+        try {
+            // 1. أفضل يوم مبيعات
+            const days = {};
+            for (let i = 6; i >= 0; i--) {
+                const d = new Date();
+                d.setDate(d.getDate() - i);
+                const dateStr = d.toISOString().split('T')[0];
+                days[dateStr] = 0;
+            }
+
+            (window.sales || []).forEach(function(s) {
+                if (days[s.date] !== undefined) days[s.date] += (s.total || 0);
             });
-        } else if (type === 'customers' && typeof customers !== 'undefined') {
-            csv += 'الاسم,الهاتف,واتساب,العنوان,المديونية\n';
-            customers.forEach(function(c) {
-                const debt = typeof getCustomerBalance === 'function' ? getCustomerBalance(c.name) : 0;
-                csv += '"' + c.name + '","' + (c.phone || '') + '","' + (c.whatsapp || '') + '","' + (c.address || '') + '",' + debt.toFixed(2) + '\n';
+
+            let bestDay = '';
+            let bestDayAmount = 0;
+            Object.keys(days).forEach(function(date) {
+                if (days[date] > bestDayAmount) {
+                    bestDayAmount = days[date];
+                    bestDay = date;
+                }
             });
-        } else if (type === 'invoices' && typeof sales !== 'undefined') {
-            csv += '#,العميل,التاريخ,المجموع,الإجمالي,الحالة\n';
-            sales.forEach(function(inv) {
-                csv += inv.number + ',"' + (inv.customer || '') + '","' + inv.date + '",' + inv.total.toFixed(2) + ',' + inv.total.toFixed(2) + ',"' + inv.status + '"\n';
+
+            const bestDayEl = document.getElementById('bestDayName');
+            const bestDaySalesEl = document.getElementById('bestDaySales');
+
+            if (bestDayEl && bestDaySalesEl) {
+                if (bestDay && bestDayAmount > 0) {
+                    const d = new Date(bestDay);
+                    const dayNames = ['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+                    bestDayEl.textContent = dayNames[d.getDay()] + ' ' + d.getDate() + '/' + (d.getMonth() + 1);
+                    bestDaySalesEl.textContent = window.formatMoney(bestDayAmount);
+                } else {
+                    bestDayEl.textContent = 'لا توجد بيانات';
+                    bestDaySalesEl.textContent = '0.00';
+                }
+            }
+
+            // 2. متوسط الفاتورة
+            const totalSales = (window.sales || []).reduce(function(s, x) { return s + (x.total || 0); }, 0);
+            const countSales = (window.sales || []).length;
+            const avg = countSales > 0 ? totalSales / countSales : 0;
+            const avgEl = document.getElementById('avgInvoice');
+            if (avgEl) avgEl.textContent = window.formatMoney(avg);
+
+            // 3. أفضل عميل
+            const customerStats = {};
+            (window.sales || []).forEach(function(s) {
+                const c = s.customer || '';
+                if (!c || c === 'عميل نقدي') return;
+                if (!customerStats[c]) customerStats[c] = 0;
+                customerStats[c] += (s.total || 0);
             });
-        } else {
-            if (typeof showToast === 'function') showToast('⚠️ لا توجد بيانات', 'warning');
-            return;
+
+            let bestCustomer = '';
+            let bestCustomerAmount = 0;
+            Object.keys(customerStats).forEach(function(c) {
+                if (customerStats[c] > bestCustomerAmount) {
+                    bestCustomerAmount = customerStats[c];
+                    bestCustomer = c;
+                }
+            });
+
+            const custNameEl = document.getElementById('bestCustomerName');
+            const custTotalEl = document.getElementById('bestCustomerTotal');
+            if (custNameEl && custTotalEl) {
+                custNameEl.textContent = bestCustomer || 'لا يوجد';
+                custTotalEl.textContent = window.formatMoney(bestCustomerAmount);
+            }
+
+            // 4. أفضل منتج
+            const productStats = {};
+            (window.sales || []).forEach(function(s) {
+                (s.items || []).forEach(function(it) {
+                    if (!it.name) return;
+                    if (!productStats[it.name]) productStats[it.name] = 0;
+                    productStats[it.name] += (it.qty || 0);
+                });
+            });
+
+            let bestProduct = '';
+            let bestProductQty = 0;
+            Object.keys(productStats).forEach(function(p) {
+                if (productStats[p] > bestProductQty) {
+                    bestProductQty = productStats[p];
+                    bestProduct = p;
+                }
+            });
+
+            const prodNameEl = document.getElementById('bestProductName');
+            const prodQtyEl = document.getElementById('bestProductQty');
+            if (prodNameEl && prodQtyEl) {
+                prodNameEl.textContent = bestProduct || 'لا يوجد';
+                prodQtyEl.textContent = bestProductQty;
+            }
+        } catch (e) {
+            console.error('❌ خطأ في ملخص الأداء:', e);
         }
-        
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = filename;
-        a.click();
-        
-        if (typeof showToast === 'function') showToast('✅ تم تصدير ' + filename, 'success');
     };
-
-    console.log('✅ تصدير Excel: جاهز');
-})();
-
-// ═══════════════════════════════════════════════════════════
-// 12. 🎨 قوالب فواتير
-// ═══════════════════════════════════════════════════════════
-(function initInvoiceTemplates() {
-    window.invoiceTemplate = localStorage.getItem('mizan_invoice_template') || 'classic';
-
-    window.setInvoiceTemplate = function(template) {
-        window.invoiceTemplate = template;
-        localStorage.setItem('mizan_invoice_template', template);
-        if (typeof showToast === 'function') {
-            const names = { 'classic': 'الكلاسيكي', 'modern': 'الحديث', 'minimal': 'البسيط' };
-            showToast('🎨 تم تغيير القالب إلى: ' + names[template], 'success');
-        }
-    };
-
-    console.log('✅ قوالب الفواتير: جاهزة');
-})();
-
-// ═══════════════════════════════════════════════════════════
-// 🎯 إضافة أزرار جديدة في قائمة "المزيد"
-// ═══════════════════════════════════════════════════════════
-(function addExtrasToMenu() {
-    function addMenuItems() {
-        const moreMenu = document.getElementById('moreMenu');
-        if (!moreMenu) return;
-        
-        const grid = moreMenu.querySelector('div[style*="grid"]');
-        if (!grid || grid.querySelector('.extras-added')) return;
-        
-        grid.classList.add('extras-added');
-        
-        const items = [
-            { icon: 'fa-star', color: '#C9A94E', label: 'عملاء VIP', action: 'showVIPCustomers' },
-            { icon: 'fa-keyboard', color: '#9B59B6', label: 'اختصارات', action: 'showKeyboardShortcuts' },
-            { icon: 'fa-database', color: '#2D8F5E', label: 'النسخ الاحتياطي', action: 'showBackupStatus' }
-        ];
-        
-        items.forEach(function(item) {
-            const btn = document.createElement('button');
-            btn.className = 'more-item';
-            btn.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:4px;background:#0D0D0D;border:2px solid #2D2D2D;color:#F5E6C8;padding:12px 6px;border-radius:10px;font-family:inherit;font-size:12px;cursor:pointer;';
-            btn.innerHTML = '<i class="fas ' + item.icon + '" style="color:' + item.color + ';font-size:20px;"></i> ' + item.label;
-            btn.onclick = function() {
-                if (typeof toggleMoreMenu === 'function') toggleMoreMenu();
-                if (typeof window[item.action] === 'function') window[item.action]();
-            };
-            grid.appendChild(btn);
-        });
-    }
 
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function() { setTimeout(addMenuItems, 3000); });
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(window.updateQuickSummary, 3000);
+        });
     } else {
-        setTimeout(addMenuItems, 3000);
+        setTimeout(window.updateQuickSummary, 3000);
     }
+
+    setTimeout(function() {
+        const originalNavigateTo = window.navigateTo;
+        if (originalNavigateTo && !originalNavigateTo._withSummary) {
+            window.navigateTo = function(page) {
+                originalNavigateTo.apply(this, arguments);
+                if (page === 'dashboard' && typeof window.updateQuickSummary === 'function') {
+                    setTimeout(window.updateQuickSummary, 200);
+                }
+            };
+            window.navigateTo._withSummary = true;
+        }
+    }, 2000);
 })();
 
-// ═══════════════════════════════════════════════════════════
-// 🎉 تم التحميل بنجاح
-// ═══════════════════════════════════════════════════════════
-console.log('');
-console.log('════════════════════════════════════════════════');
-console.log('🎉 تم تحميل app-extras.js (النسخة المُصلحة)');
-console.log('════════════════════════════════════════════════');
-console.log('✅ 12 ميزة إضافية جاهزة');
-console.log('✅ لا PWA (لتجنب الأخطاء)');
-console.log('✅ جميع الأخطاء مُصلحة');
-console.log('════════════════════════════════════════════════');
+console.log('✅ app-extras.js جاهز');
