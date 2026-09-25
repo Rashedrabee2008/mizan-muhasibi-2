@@ -521,3 +521,128 @@ window.devGenerateCode = window.devGenerateCode || async function(deviceId) {
 };
 
 console.log('✅ dev-panel.js - الإصلاحات الإضافية محمّلة');
+
+// ═══════════════════════════════════════════════════════════
+// 🔧 الإصلاحات النهائية
+// ═══════════════════════════════════════════════════════════
+
+// دالة toggle تفعيل الأجهزة
+window.devToggleActivation = async function(deviceId, activate) {
+    if (!window.firebaseReady) {
+        alert('⚠️ Firebase غير متصل');
+        return;
+    }
+    
+    try {
+        const ref = firebase.database().ref('mizan_licenses/mizan_license/devices');
+        const snapshot = await ref.once('value');
+        let devices = snapshot.val() || [];
+        
+        if (!Array.isArray(devices)) {
+            devices = Object.values(devices);
+        }
+        
+        let found = false;
+        devices = devices.map(function(d) {
+            if (d && d.id === deviceId) {
+                d.activated = activate;
+                found = true;
+            }
+            return d;
+        });
+        
+        if (!found) {
+            alert('⚠️ الجهاز غير موجود');
+            return;
+        }
+        
+        await ref.set(devices);
+        alert(activate ? '✅ تم تفعيل الجهاز' : '⏸️ تم تعطيل الجهاز');
+        
+        if (typeof devTabDevices === 'function') {
+            devTabDevices();
+        }
+    } catch (e) {
+        console.error('❌', e);
+        alert('❌ ' + e.message);
+    }
+};
+
+// دالة توليد كود التنشيط
+window.devGenerateCode = async function(deviceId) {
+    if (!deviceId) {
+        return 'MIZAN-' + Math.random().toString(36).substring(2, 10).toUpperCase();
+    }
+    
+    try {
+        const shortId = deviceId.substring(0, 8).toUpperCase();
+        const hash = btoa(deviceId + 'MIZAN2025SECRET').replace(/[^A-Z0-9]/gi, '').toUpperCase();
+        return 'MIZAN-' + shortId.substring(0, 4) + '-' + hash.substring(0, 4) + '-' + hash.substring(4, 8);
+    } catch (e) {
+        return 'MIZAN-' + deviceId.substring(0, 8).toUpperCase();
+    }
+};
+
+// دالة عرض الأجهزة (محدثة)
+window.devTabDevices = async function() {
+    const content = document.getElementById('devPanelContent');
+    if (!content) return;
+    
+    if (!window.firebaseReady) {
+        content.innerHTML = '<div style="text-align:center;padding:30px;color:#E06060;">⚠️ Firebase غير متصل</div>';
+        return;
+    }
+    
+    content.innerHTML = '<div style="text-align:center;padding:30px;color:#A89070;">⏳ جاري التحميل...</div>';
+    
+    try {
+        const ref = firebase.database().ref('mizan_licenses/mizan_license');
+        const snapshot = await ref.once('value');
+        const data = snapshot.val() || {};
+        let devices = data.devices || [];
+        
+        if (!Array.isArray(devices)) {
+            devices = Object.values(devices);
+        }
+        
+        const maxDevices = data.maxDevices || 5;
+        
+        let html = '<div style="display:flex;justify-content:space-between;margin-bottom:12px;padding:10px;background:#1A1A1A;border-radius:8px;">' +
+            '<span style="color:#A89070;font-size:12px;">📱 الأجهزة المسجلة</span>' +
+            '<strong style="color:#C9A94E;font-size:14px;">' + devices.length + ' / ' + maxDevices + '</strong>' +
+        '</div>';
+        
+        if (devices.length === 0) {
+            html += '<div style="text-align:center;padding:30px;color:#5D5D5D;">لا توجد أجهزة مسجلة</div>';
+        } else {
+            devices.forEach(function(d, i) {
+                const statusColor = d.activated ? '#2D8F5E' : '#E6A830';
+                const statusText = d.activated ? '✅ مفعّل' : '⏳ غير مفعّل';
+                
+                html += '<div style="background:#1A1A1A;border-radius:10px;padding:12px;margin-bottom:8px;border-right:4px solid ' + statusColor + ';">' +
+                    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">' +
+                        '<strong style="color:#C9A94E;font-size:13px;">📱 ' + (d.name || 'جهاز ' + (i+1)) + '</strong>' +
+                        '<span style="color:' + statusColor + ';font-size:10px;font-weight:800;">' + statusText + '</span>' +
+                    '</div>' +
+                    '<div style="font-size:10px;color:#A89070;font-family:monospace;word-break:break-all;margin-bottom:4px;">' +
+                        (d.id || '') +
+                    '</div>' +
+                    '<div style="font-size:10px;color:#5D5D5D;">' +
+                        '📅 ' + (d.registeredAt ? new Date(d.registeredAt).toLocaleDateString('ar-EG') : 'غير معروف') +
+                    '</div>' +
+                    '<div style="display:flex;gap:6px;margin-top:8px;">' +
+                        '<button onclick="devGenCodeForDevice(\'' + d.id + '\')" style="flex:1;background:#C9A94E;border:none;color:#0D0D0D;border-radius:6px;padding:6px;font-size:11px;cursor:pointer;font-family:inherit;font-weight:900;">🔑 كود</button>' +
+                        '<button onclick="devToggleActivation(\'' + d.id + '\', ' + !d.activated + ')" style="flex:1;background:' + (d.activated ? '#E6A830' : '#2D8F5E') + ';border:none;color:#fff;border-radius:6px;padding:6px;font-size:11px;cursor:pointer;font-family:inherit;font-weight:900;">' + (d.activated ? '⏸️' : '▶️') + '</button>' +
+                        '<button onclick="devDeleteDevice(\'' + d.id + '\')" style="flex:1;background:#E06060;border:none;color:#fff;border-radius:6px;padding:6px;font-size:11px;cursor:pointer;font-family:inherit;font-weight:900;">🗑️</button>' +
+                    '</div>' +
+                '</div>';
+            });
+        }
+        
+        content.innerHTML = html;
+    } catch (e) {
+        content.innerHTML = '<div style="text-align:center;padding:30px;color:#E06060;">❌ ' + e.message + '</div>';
+    }
+};
+
+console.log('✅ dev-panel.js - الإصلاحات محمّلة');
