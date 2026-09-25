@@ -163,103 +163,127 @@ console.log('🚀 تحميل app-extras.js - النسخة المُصلحة');
 })();
 
 // ═══════════════════════════════════════════════════════════
-// 4. 📊 رسوم بيانية (SVG نظيف - مُصلح)
+// 📊 Quick Summary - ملخص الأداء
 // ═══════════════════════════════════════════════════════════
-(function initAdvancedCharts() {
-    window.drawSalesChart = function(containerId) {
-        const container = document.getElementById(containerId);
-        if (!container || typeof sales === 'undefined') return;
-
-        // ✅ آخر 7 أيام
-        const days = [];
-        for (let i = 6; i >= 0; i--) {
-            const d = new Date();
-            d.setDate(d.getDate() - i);
-            const dateStr = d.toISOString().split('T')[0];
-            const dayTotal = sales.filter(function(s) { return s.date === dateStr; })
-                .reduce(function(sum, s) { return sum + (s.total || 0); }, 0);
-            days.push({
-                date: dateStr,
-                total: dayTotal,
-                dayName: ['أحد', 'إثنين', 'ثلاثاء', 'أربعاء', 'خميس', 'جمعة', 'سبت'][d.getDay()]
-            });
+window.updateQuickSummary = function() {
+    // 1. أفضل يوم مبيعات (آخر 7 أيام)
+    const days = {};
+    const today = new Date();
+    
+    for (let i = 6; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        const dateStr = d.toISOString().split('T')[0];
+        days[dateStr] = 0;
+    }
+    
+    (window.sales || []).forEach(function(s) {
+        if (days[s.date] !== undefined) {
+            days[s.date] += (s.total || 0);
         }
-
-        const maxVal = Math.max.apply(null, days.map(function(d) { return d.total; }).concat([1]));
-
-        let svg = '<svg viewBox="0 0 340 140" preserveAspectRatio="xMidYMid meet" style="width:100%;height:140px;">';
-
-        // شبكة خلفية
-        for (let i = 0; i <= 4; i++) {
-            const y = 15 + (i * 25);
-            svg += '<line x1="30" y1="' + y + '" x2="330" y2="' + y + '" stroke="#2D2D2D" stroke-width="0.5" stroke-dasharray="3,3"/>';
+    });
+    
+    let bestDay = '';
+    let bestDayAmount = 0;
+    Object.keys(days).forEach(function(date) {
+        if (days[date] > bestDayAmount) {
+            bestDayAmount = days[date];
+            bestDay = date;
         }
-
-        // محور Y (القيم)
-        for (let i = 0; i <= 4; i++) {
-            const y = 15 + (i * 25);
-            const value = Math.round(maxVal * (1 - i / 4));
-            svg += '<text x="25" y="' + (y + 3) + '" fill="#5D5D5D" font-size="8" text-anchor="end">' + value + '</text>';
+    });
+    
+    const bestDayEl = document.getElementById('bestDayName');
+    const bestDaySalesEl = document.getElementById('bestDaySales');
+    
+    if (bestDayEl && bestDay && bestDayAmount > 0) {
+        const d = new Date(bestDay);
+        const dayNames = ['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+        bestDayEl.textContent = dayNames[d.getDay()] + ' ' + d.getDate() + '/' + (d.getMonth() + 1);
+        bestDaySalesEl.textContent = window.formatMoney(bestDayAmount);
+    } else if (bestDayEl) {
+        bestDayEl.textContent = 'لا توجد بيانات';
+        bestDaySalesEl.textContent = '0.00';
+    }
+    
+    // 2. متوسط الفاتورة
+    const totalSales = (window.sales || []).reduce(function(s, x) { return s + (x.total || 0); }, 0);
+    const countSales = (window.sales || []).length;
+    const avg = countSales > 0 ? totalSales / countSales : 0;
+    
+    const avgEl = document.getElementById('avgInvoice');
+    if (avgEl) avgEl.textContent = window.formatMoney(avg);
+    
+    // 3. أفضل عميل
+    const customerStats = {};
+    (window.sales || []).forEach(function(s) {
+        const c = s.customer || 'عميل نقدي';
+        if (c === 'عميل نقدي') return;
+        if (!customerStats[c]) customerStats[c] = 0;
+        customerStats[c] += (s.total || 0);
+    });
+    
+    let bestCustomer = '';
+    let bestCustomerAmount = 0;
+    Object.keys(customerStats).forEach(function(c) {
+        if (customerStats[c] > bestCustomerAmount) {
+            bestCustomerAmount = customerStats[c];
+            bestCustomer = c;
         }
-
-        // نقاط البيانات
-        const spacing = (330 - 40) / (days.length - 1);
-        const points = days.map(function(d, i) {
-            const x = 40 + (i * spacing);
-            const y = 115 - ((d.total / maxVal) * 100);
-            return x + ',' + y;
-        }).join(' ');
-
-        // خط الرسم
-        svg += '<polyline points="' + points + '" fill="none" stroke="#C9A94E" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>';
-
-        // نقاط دائرية + قيم
-        days.forEach(function(d, i) {
-            const x = 40 + (i * spacing);
-            const y = 115 - ((d.total / maxVal) * 100);
-
-            if (d.total > 0) {
-                svg += '<circle cx="' + x + '" cy="' + y + '" r="4" fill="#C9A94E" stroke="#0D0D0D" stroke-width="2"/>';
-                svg += '<text x="' + x + '" y="' + (y - 10) + '" fill="#C9A94E" font-size="8" text-anchor="middle" font-weight="bold">' + d.total.toFixed(0) + '</text>';
-            } else {
-                svg += '<circle cx="' + x + '" cy="' + y + '" r="3" fill="#5D5D5D" stroke="#0D0D0D" stroke-width="1.5"/>';
-            }
-
-            svg += '<text x="' + x + '" y="132" fill="#A89070" font-size="9" text-anchor="middle" font-weight="bold">' + d.dayName + '</text>';
+    });
+    
+    const custNameEl = document.getElementById('bestCustomerName');
+    const custTotalEl = document.getElementById('bestCustomerTotal');
+    if (custNameEl) {
+        custNameEl.textContent = bestCustomer || 'لا يوجد';
+        custTotalEl.textContent = window.formatMoney(bestCustomerAmount);
+    }
+    
+    // 4. أفضل منتج
+    const productStats = {};
+    (window.sales || []).forEach(function(s) {
+        (s.items || []).forEach(function(it) {
+            if (!productStats[it.name]) productStats[it.name] = 0;
+            productStats[it.name] += (it.qty || 0);
         });
-
-        svg += '</svg>';
-        container.innerHTML = svg;
-    };
-
-    function addChartsToDashboard() {
-        const pageContent = document.querySelector('#page-dashboard .page-content');
-        if (!pageContent || document.getElementById('advancedChartContainer')) return;
-
-        const chartDiv = document.createElement('div');
-        chartDiv.id = 'advancedChartContainer';
-        chartDiv.style.cssText = 'background:#1C1C1C;border-radius:14px;padding:14px;margin:14px 0;' +
-            'border:1px solid #2D2D2D;overflow:hidden;box-sizing:border-box;width:100%;';
-        chartDiv.innerHTML = '<h3 style="color:#C9A94E;font-size:14px;margin-bottom:12px;">📈 المبيعات - آخر 7 أيام</h3>' +
-            '<div id="salesChart30" style="width:100%;height:140px;"></div>';
-
-        const firstStats = pageContent.querySelector('.dashboard-stats');
-        if (firstStats) {
-            firstStats.parentNode.insertBefore(chartDiv, firstStats);
+    });
+    
+    let bestProduct = '';
+    let bestProductQty = 0;
+    Object.keys(productStats).forEach(function(p) {
+        if (productStats[p] > bestProductQty) {
+            bestProductQty = productStats[p];
+            bestProduct = p;
         }
-
-        setTimeout(function() { drawSalesChart('salesChart30'); }, 100);
+    });
+    
+    const prodNameEl = document.getElementById('bestProductName');
+    const prodQtyEl = document.getElementById('bestProductQty');
+    if (prodNameEl) {
+        prodNameEl.textContent = bestProduct || 'لا يوجد';
+        prodQtyEl.textContent = bestProductQty;
     }
+    
+    console.log('✅ تم تحديث Quick Summary');
+};
 
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function() { setTimeout(addChartsToDashboard, 3000); });
-    } else {
-        setTimeout(addChartsToDashboard, 3000);
+// استدعاء عند تحميل الصفحة
+setTimeout(function() {
+    if (typeof updateQuickSummary === 'function') {
+        updateQuickSummary();
     }
+}, 3000);
 
-    console.log('✅ الرسوم البيانية: جاهزة');
-})();
-
+// استدعاء عند عرض لوحة التحكم
+const originalNavigateTo = window.navigateTo;
+if (originalNavigateTo && !originalNavigateTo._withSummary) {
+    window.navigateTo = function(page) {
+        originalNavigateTo.apply(this, arguments);
+        if (page === 'dashboard' && typeof updateQuickSummary === 'function') {
+            setTimeout(updateQuickSummary, 200);
+        }
+    };
+    window.navigateTo._withSummary = true;
+}
 // ═══════════════════════════════════════════════════════════
 // 5. 🔔 الإشعارات
 // ═══════════════════════════════════════════════════════════
