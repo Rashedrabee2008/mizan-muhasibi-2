@@ -1,11 +1,39 @@
 // ============================================================
-// erp.js - نظام ERP بسيط
+// erp.js - نظام ERP كامل (مستودعات + فروع + عملات + ضرائب)
 // ============================================================
 
 (function() {
     'use strict';
 
-    console.log('📊 تحميل erp.js');
+    console.log('📊 تحميل erp.js - النسخة الكاملة');
+
+    // ═══════════════════════════════════════════════════════════
+    // 🎛️ دالة تبديل التبويبات (مهمة!)
+    // ═══════════════════════════════════════════════════════════
+    window.showERPTab = function(tab, btn) {
+        console.log('🔄 تبديل إلى:', tab);
+
+        // إخفاء كل التبويبات
+        ['warehouses', 'branches', 'currencies'].forEach(function(t) {
+            const el = document.getElementById('erpTab' + t.charAt(0).toUpperCase() + t.slice(1));
+            if (el) el.style.display = 'none';
+        });
+
+        // إظهار التبويب المطلوب
+        const target = document.getElementById('erpTab' + tab.charAt(0).toUpperCase() + tab.slice(1));
+        if (target) target.style.display = 'block';
+
+        // تحديث الأزرار
+        document.querySelectorAll('#page-erp .tab-btn').forEach(function(b) {
+            b.classList.remove('active');
+        });
+        if (btn) btn.classList.add('active');
+
+        // تحديث القوائم
+        if (tab === 'warehouses' && typeof renderWarehouses === 'function') renderWarehouses();
+        if (tab === 'branches' && typeof renderBranches === 'function') renderBranches();
+        if (tab === 'currencies' && typeof renderCurrencies === 'function') renderCurrencies();
+    };
 
     // ═══════════════════════════════════════════════════════════
     // 📦 إدارة المستودعات
@@ -24,8 +52,11 @@
             const data = localStorage.getItem('mizan_warehouses');
             window.warehouses = data ? JSON.parse(data) : [];
             
+            if (!Array.isArray(window.warehouses)) {
+                window.warehouses = Object.values(window.warehouses);
+            }
+            
             if (window.warehouses.length === 0) {
-                // إنشاء مستودع رئيسي افتراضي
                 window.warehouses = [{
                     id: 1,
                     name: 'المستودع الرئيسي',
@@ -37,7 +68,9 @@
                 }];
                 localStorage.setItem('mizan_warehouses', JSON.stringify(window.warehouses));
             }
+            console.log('✅ تم تحميل', window.warehouses.length, 'مستودع');
         } catch (e) {
+            console.error('❌ خطأ تحميل المستودعات:', e);
             window.warehouses = [];
         }
     };
@@ -80,6 +113,12 @@
         }
 
         localStorage.setItem('mizan_warehouses', JSON.stringify(window.warehouses));
+        
+        // مزامنة Firebase
+        if (window.firebaseReady) {
+            firebase.database().ref('mizan/warehouses').set(window.warehouses).catch(function() {});
+        }
+        
         resetWarehouseForm();
         renderWarehouses();
     };
@@ -108,7 +147,7 @@
         window.warehouses.forEach(function(w) {
             const typeInfo = window.WAREHOUSE_TYPES[w.type] || { name: w.type, icon: '📦' };
             
-            html += '<div class="cash-box-card" style="margin-bottom:10px;border-right:4px solid #4A8AB5;">' +
+            html += '<div class="cash-box-card" style="margin-bottom:10px;border-right:4px solid #4A8AB5;padding:14px;">' +
                 '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">' +
                     '<div style="display:flex;align-items:center;gap:8px;">' +
                         '<span style="font-size:24px;">' + typeInfo.icon + '</span>' +
@@ -136,12 +175,16 @@
         const w = window.warehouses.find(function(x) { return x.id == id; });
         if (!w) return;
         
-        const ids = ['warehouseId', 'warehouseName', 'warehouseLocation', 'warehouseManager'];
-        const values = [w.id, w.name, w.location || '', w.manager || ''];
+        const fields = {
+            'warehouseId': w.id,
+            'warehouseName': w.name,
+            'warehouseLocation': w.location || '',
+            'warehouseManager': w.manager || ''
+        };
         
-        ids.forEach(function(id, i) {
-            const el = document.getElementById(id);
-            if (el) el.value = values[i];
+        Object.keys(fields).forEach(function(key) {
+            const el = document.getElementById(key);
+            if (el) el.value = fields[key];
         });
         
         const typeEl = document.getElementById('warehouseType');
@@ -154,6 +197,11 @@
         if (!confirm('⚠️ حذف هذا المستودع؟')) return;
         window.warehouses = window.warehouses.filter(function(w) { return w.id != id; });
         localStorage.setItem('mizan_warehouses', JSON.stringify(window.warehouses));
+        
+        if (window.firebaseReady) {
+            firebase.database().ref('mizan/warehouses').set(window.warehouses).catch(function() {});
+        }
+        
         renderWarehouses();
         if (typeof showToast === 'function') showToast('🗑️ تم الحذف', 'info');
     };
@@ -168,6 +216,10 @@
             const data = localStorage.getItem('mizan_branches');
             window.branches = data ? JSON.parse(data) : [];
             
+            if (!Array.isArray(window.branches)) {
+                window.branches = Object.values(window.branches);
+            }
+            
             if (window.branches.length === 0) {
                 window.branches = [{
                     id: 1,
@@ -181,7 +233,9 @@
                 }];
                 localStorage.setItem('mizan_branches', JSON.stringify(window.branches));
             }
+            console.log('✅ تم تحميل', window.branches.length, 'فرع');
         } catch (e) {
+            console.error('❌ خطأ تحميل الفروع:', e);
             window.branches = [];
         }
     };
@@ -221,6 +275,17 @@
         }
 
         localStorage.setItem('mizan_branches', JSON.stringify(window.branches));
+        
+        if (window.firebaseReady) {
+            firebase.database().ref('mizan/branches').set(window.branches).catch(function() {});
+        }
+        
+        // تصفير النموذج
+        ['branchId', 'branchName', 'branchCode', 'branchAddress', 'branchPhone'].forEach(function(id) {
+            const el = document.getElementById(id);
+            if (el) el.value = '';
+        });
+        
         renderBranches();
     };
 
@@ -235,7 +300,7 @@
 
         let html = '';
         window.branches.forEach(function(b) {
-            html += '<div class="cash-box-card" style="margin-bottom:10px;border-right:4px solid #9B59B6;">' +
+            html += '<div class="cash-box-card" style="margin-bottom:10px;border-right:4px solid #9B59B6;padding:14px;">' +
                 '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">' +
                     '<div style="display:flex;align-items:center;gap:8px;">' +
                         '<span style="font-size:24px;">🏢</span>' +
@@ -263,7 +328,13 @@
         if (!confirm('⚠️ حذف هذا الفرع؟')) return;
         window.branches = window.branches.filter(function(b) { return b.id != id; });
         localStorage.setItem('mizan_branches', JSON.stringify(window.branches));
+        
+        if (window.firebaseReady) {
+            firebase.database().ref('mizan/branches').set(window.branches).catch(function() {});
+        }
+        
         renderBranches();
+        if (typeof showToast === 'function') showToast('🗑️ تم الحذف', 'info');
     };
 
     // ═══════════════════════════════════════════════════════════
@@ -283,14 +354,28 @@
         try {
             const data = localStorage.getItem('mizan_currencies');
             window.currencies = data ? JSON.parse(data) : DEFAULT_CURRENCIES;
+            
+            if (!Array.isArray(window.currencies)) {
+                window.currencies = Object.values(window.currencies);
+            }
+            
+            if (window.currencies.length === 0) {
+                window.currencies = DEFAULT_CURRENCIES.slice();
+                localStorage.setItem('mizan_currencies', JSON.stringify(window.currencies));
+            }
+            console.log('✅ تم تحميل', window.currencies.length, 'عملة');
         } catch (e) {
-            window.currencies = DEFAULT_CURRENCIES;
+            console.error('❌ خطأ تحميل العملات:', e);
+            window.currencies = DEFAULT_CURRENCIES.slice();
         }
     };
 
     window.convertCurrency = function(amount, fromCode, toCode) {
+        if (!window.currencies || window.currencies.length === 0) return amount;
+        
         const from = window.currencies.find(function(c) { return c.code === fromCode; });
         const to = window.currencies.find(function(c) { return c.code === toCode; });
+        
         if (!from || !to) return amount;
         
         const amountInEGP = amount * from.rate;
@@ -302,7 +387,7 @@
         if (!c) return;
 
         let html = '<div style="background:#1A1A1A;border-radius:10px;padding:12px;margin-bottom:12px;color:#A89070;font-size:11px;text-align:center;">' +
-            '💱 سعر الصرف مقابل الجنيه المصري' +
+            '💱 أسعار الصرف مقابل الجنيه المصري' +
         '</div>';
 
         window.currencies.forEach(function(curr) {
@@ -330,44 +415,24 @@
         loadWarehouses();
         loadBranches();
         loadCurrencies();
-        console.log('✅ ERP جاهز');
+        
+        // عرض فوري
+        setTimeout(function() {
+            renderWarehouses();
+            renderBranches();
+            renderCurrencies();
+        }, 500);
+        
+        console.log('✅ ERP جاهز - المستودعات:', window.warehouses.length, '| الفروع:', window.branches.length, '| العملات:', window.currencies.length);
     }
 
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', function() {
-            setTimeout(initERP, 3000);
+            setTimeout(initERP, 2000);
         });
     } else {
-        setTimeout(initERP, 3000);
+        setTimeout(initERP, 2000);
     }
 
-    console.log('✅ erp.js جاهز');
+    console.log('✅ erp.js جاهز - جميع الدوال محمّلة');
 })();
-    // ═══════════════════════════════════════════════════════════
-    // 🎛️ تبديل تبويبات ERP
-    // ═══════════════════════════════════════════════════════════
-    window.showERPTab = function(tab, btn) {
-        // إخفاء كل التبويبات
-        ['warehouses', 'branches', 'currencies'].forEach(function(t) {
-            const el = document.getElementById('erpTab' + t.charAt(0).toUpperCase() + t.slice(1));
-            if (el) el.style.display = 'none';
-        });
-        
-        // إظهار التبويب المطلوب
-        const target = document.getElementById('erpTab' + tab.charAt(0).toUpperCase() + tab.slice(1));
-        if (target) target.style.display = 'block';
-        
-        // تحديث الأزرار
-        document.querySelectorAll('#page-erp .tab-btn').forEach(function(b) {
-            b.classList.remove('active');
-        });
-        if (btn) btn.classList.add('active');
-        
-        // تحديث القوائم
-        if (tab === 'warehouses') renderWarehouses();
-        if (tab === 'branches') renderBranches();
-        if (tab === 'currencies') renderCurrencies();
-    };
-    
-    console.log('✅ showERPTab جاهزة');
-
