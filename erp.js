@@ -343,3 +343,31 @@
 
     console.log('✅ erp.js جاهز');
 })();
+    // ═══════════════════════════════════════════════════════════
+    // 🎛️ تبديل تبويبات ERP
+    // ═══════════════════════════════════════════════════════════
+    window.showERPTab = function(tab, btn) {
+        // إخفاء كل التبويبات
+        ['warehouses', 'branches', 'currencies'].forEach(function(t) {
+            const el = document.getElementById('erpTab' + t.charAt(0).toUpperCase() + t.slice(1));
+            if (el) el.style.display = 'none';
+        });
+        
+        // إظهار التبويب المطلوب
+        const target = document.getElementById('erpTab' + tab.charAt(0).toUpperCase() + tab.slice(1));
+        if (target) target.style.display = 'block';
+        
+        // تحديث الأزرار
+        document.querySelectorAll('#page-erp .tab-btn').forEach(function(b) {
+            b.classList.remove('active');
+        });
+        if (btn) btn.classList.add('active');
+        
+        // تحديث القوائم
+        if (tab === 'warehouses') renderWarehouses();
+        if (tab === 'branches') renderBranches();
+        if (tab === 'currencies') renderCurrencies();
+    };
+    
+    console.log('✅ showERPTab جاهزة');
+
