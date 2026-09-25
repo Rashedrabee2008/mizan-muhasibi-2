@@ -1715,6 +1715,256 @@ window.showInvoiceDetails = function(id) {
     openModal(html);
 };
 
+// ═══════════════════════════════════════════════════════════
+// 🖨️ طباعة الفاتورة
+// ═══════════════════════════════════════════════════════════
+window.printInvoice = function(id) {
+    const inv = sales.find(function(s) { return s.id === id; });
+    if (!inv) {
+        showToast('⚠️ الفاتورة غير موجودة', 'error');
+        return;
+    }
+
+    const company = companyData || { name: 'الميزان', phone: '', address: '', footer: 'شكراً لتعاملكم معنا 🌟' };
+
+    let itemsRows = '';
+    (inv.items || []).forEach(function(it, i) {
+        itemsRows += '<tr>' +
+            '<td style="padding:8px;border:1px solid #ddd;text-align:center;">' + (i+1) + '</td>' +
+            '<td style="padding:8px;border:1px solid #ddd;">' + it.name + '</td>' +
+            '<td style="padding:8px;border:1px solid #ddd;text-align:center;">' + it.qty + '</td>' +
+            '<td style="padding:8px;border:1px solid #ddd;text-align:center;">' + formatMoney(it.price) + '</td>' +
+            '<td style="padding:8px;border:1px solid #ddd;text-align:center;">' + formatMoney(it.total) + '</td>' +
+        '</tr>';
+    });
+
+    const printContent = `
+        <!DOCTYPE html>
+        <html dir="rtl" lang="ar">
+        <head>
+            <meta charset="UTF-8">
+            <title>فاتورة #${inv.number}</title>
+            <style>
+                * { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
+                body { padding: 20px; background: #fff; color: #000; }
+                .header { text-align: center; padding-bottom: 15px; border-bottom: 3px solid #C9A94E; margin-bottom: 20px; }
+                .header h1 { color: #C9A94E; font-size: 28px; margin-bottom: 5px; }
+                .header p { color: #666; font-size: 13px; }
+                .info-box { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; background: #f9f9f9; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+                .info-box div { font-size: 13px; line-height: 1.8; }
+                .info-box strong { color: #333; }
+                table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+                th { background: #C9A94E; color: #fff; padding: 10px; border: 1px solid #C9A94E; font-size: 13px; }
+                td { font-size: 13px; }
+                .totals { background: #f9f9f9; padding: 15px; border-radius: 8px; margin-top: 10px; }
+                .totals div { display: flex; justify-content: space-between; padding: 6px 0; font-size: 14px; }
+                .totals .final { border-top: 2px solid #C9A94E; margin-top: 8px; padding-top: 8px; font-size: 18px; font-weight: 900; color: #C9A94E; }
+                .footer { text-align: center; margin-top: 20px; padding-top: 15px; border-top: 2px dashed #ddd; font-size: 12px; color: #666; }
+                @media print { body { padding: 0; } }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>${company.name || 'الميزان'}</h1>
+                ${company.phone ? '<p>📞 ' + company.phone + '</p>' : ''}
+                ${company.address ? '<p>📍 ' + company.address + '</p>' : ''}
+                ${company.tax ? '<p>الرقم الضريبي: ' + company.tax + '</p>' : ''}
+            </div>
+
+            <div class="info-box">
+                <div>
+                    <strong>رقم الفاتورة:</strong> #${inv.number}<br>
+                    <strong>التاريخ:</strong> ${inv.date}<br>
+                    <strong>الوقت:</strong> ${inv.time || ''}
+                </div>
+                <div>
+                    <strong>العميل:</strong> ${inv.customer || 'عميل نقدي'}<br>
+                    <strong>البائع:</strong> ${inv.seller || '-'}<br>
+                    <strong>طريقة الدفع:</strong> ${getPaymentMethodLabel(inv.paymentMethod)}
+                </div>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width:50px;">#</th>
+                        <th>الصنف</th>
+                        <th style="width:80px;">الكمية</th>
+                        <th style="width:100px;">السعر</th>
+                        <th style="width:110px;">الإجمالي</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${itemsRows}
+                </tbody>
+            </table>
+
+            <div class="totals">
+                <div><span>المجموع:</span><span>${formatMoney(inv.subtotal || inv.total)} ج.م</span></div>
+                ${inv.vat > 0 ? '<div><span>الضريبة:</span><span>' + formatMoney(inv.vat) + ' ج.م</span></div>' : ''}
+                ${inv.discount > 0 ? '<div><span>الخصم:</span><span>- ' + formatMoney(inv.discount) + ' ج.م</span></div>' : ''}
+                ${inv.levelDiscount > 0 ? '<div><span>خصم المستوى:</span><span>- ' + formatMoney(inv.levelDiscount) + ' ج.م</span></div>' : ''}
+                <div class="final"><span>الإجمالي:</span><span>${formatMoney(inv.total)} ج.م</span></div>
+            </div>
+
+            <div class="footer">
+                ${company.footer || 'شكراً لتعاملكم معنا 🌟'}
+            </div>
+
+            <script>
+                window.onload = function() {
+                    setTimeout(function() {
+                        window.print();
+                    }, 500);
+                };
+            <\/script>
+        </body>
+        </html>
+    `;
+
+    const printWindow = window.open('', '_blank', 'width=900,height=700');
+    if (!printWindow) {
+        showToast('⚠️ يرجى السماح بالنوافذ المنبثقة', 'warning');
+        return;
+    }
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+    showToast('🖨️ جاري الطباعة...', 'info');
+};
+
+window.printThermalInvoice = function(id) {
+    const inv = sales.find(function(s) { return s.id === id; });
+    if (!inv) {
+        showToast('⚠️ الفاتورة غير موجودة', 'error');
+        return;
+    }
+
+    const company = companyData || { name: 'الميزان' };
+
+    let itemsRows = '';
+    (inv.items || []).forEach(function(it) {
+        itemsRows += `
+            <div style="display:flex;justify-content:space-between;padding:2px 0;font-size:11px;">
+                <span>${it.name}</span>
+                <span>${it.qty} × ${formatMoney(it.price)} = ${formatMoney(it.total)}</span>
+            </div>
+        `;
+    });
+
+    const printContent = `
+        <!DOCTYPE html>
+        <html dir="rtl" lang="ar">
+        <head>
+            <meta charset="UTF-8">
+            <title>إيصال #${inv.number}</title>
+            <style>
+                * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Tajawal', Arial, sans-serif; }
+                body { width: 80mm; padding: 5mm; background: #fff; color: #000; font-size: 12px; }
+                .center { text-align: center; }
+                .bold { font-weight: 900; }
+                .line { border-top: 1px dashed #000; margin: 5px 0; padding: 5px 0; }
+                .row { display: flex; justify-content: space-between; padding: 2px 0; }
+                .large { font-size: 16px; font-weight: 900; }
+                @media print { body { width: 80mm; } }
+            </style>
+        </head>
+        <body>
+            <div class="center">
+                <div class="large">${company.name || 'الميزان'}</div>
+                ${company.phone ? '<div>' + company.phone + '</div>' : ''}
+            </div>
+            
+            <div class="line"></div>
+            
+            <div class="row"><span>فاتورة:</span><span class="bold">#${inv.number}</span></div>
+            <div class="row"><span>التاريخ:</span><span>${inv.date}</span></div>
+            <div class="row"><span>الوقت:</span><span>${inv.time || ''}</span></div>
+            <div class="row"><span>العميل:</span><span>${inv.customer || 'نقدي'}</span></div>
+            
+            <div class="line"></div>
+            
+            ${itemsRows}
+            
+            <div class="line"></div>
+            
+            <div class="row large"><span>الإجمالي:</span><span>${formatMoney(inv.total)} ج.م</span></div>
+            
+            <div class="line"></div>
+            
+            <div class="center">
+                ${company.footer || 'شكراً 🌟'}
+            </div>
+        </body>
+        </html>
+    `;
+
+    const printWindow = window.open('', '_blank', 'width=400,height=600');
+    if (!printWindow) {
+        showToast('⚠️ يرجى السماح بالنوافذ المنبثقة', 'warning');
+        return;
+    }
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+};
+
+window.printReceipt = function(id) {
+    // طباعة إيصال الدفعة
+    const pay = payments.find(function(p) { return p.id === id; });
+    if (!pay) return;
+    
+    const company = companyData || { name: 'الميزان' };
+    const isCollect = pay.type === 'collect';
+    const label = isCollect ? 'إيصال استلام نقدية' : 'إيصال دفع نقدية';
+    
+    const printContent = `
+        <!DOCTYPE html>
+        <html dir="rtl" lang="ar">
+        <head>
+            <meta charset="UTF-8">
+            <title>${label}</title>
+            <style>
+                body { font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto; }
+                .header { text-align: center; border-bottom: 2px solid #2D8F5E; padding-bottom: 15px; margin-bottom: 20px; }
+                .header h1 { color: #2D8F5E; }
+                .info { background: #f9f9f9; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
+                .info div { padding: 5px 0; }
+                .amount { text-align: center; font-size: 28px; font-weight: 900; color: #2D8F5E; padding: 20px; border: 2px solid #2D8F5E; border-radius: 8px; }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>${company.name || 'الميزان'}</h1>
+                <p>${label}</p>
+            </div>
+            <div class="info">
+                <div><strong>رقم الإيصال:</strong> #${String(pay.id).slice(-6)}</div>
+                <div><strong>التاريخ:</strong> ${pay.date}</div>
+                <div><strong>${isCollect ? 'العميل' : 'المورد'}:</strong> ${pay.party}</div>
+            </div>
+            <div class="amount">${formatMoney(pay.amount)} ج.م</div>
+            <script>window.onload = function() { setTimeout(function() { window.print(); }, 500); };<\/script>
+        </body>
+        </html>
+    `;
+    
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+        printWindow.document.write(printContent);
+        printWindow.document.close();
+    }
+};
+
+// ═══════════════════════════════════════════════════════════
+// 📱 QR Code wrapper
+// ═══════════════════════════════════════════════════════════
+window.showQRCode = function(invoiceId) {
+    if (typeof window.showInvoiceQR === 'function') {
+        window.showInvoiceQR(invoiceId);
+    } else {
+        showToast('⚠️ ميزة QR غير متاحة', 'warning');
+    }
+};
+
 window.deleteInvoice = function(id) {
     if (!canDelete()) { showToast('⚠️ لا تملك صلاحية', 'error'); return; }
     const inv = sales.find(function(s) { return s.id === id; });
