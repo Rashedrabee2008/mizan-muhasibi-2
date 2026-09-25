@@ -28,32 +28,34 @@
     // 📋 إنشاء نص الفاتورة
     // ═══════════════════════════════════════════════════════════
     window.generateInvoiceQRText = function(invoice) {
-        // نص مبسط يحتوي على معلومات مهمة
-        const lines = [
-            '⚖️ ' + (window.companyData ? window.companyData.name : 'الميزان'),
-            '📄 فاتورة #' + invoice.number,
-            '📅 ' + invoice.date + ' ' + (invoice.time || ''),
-            '👤 ' + (invoice.customer || 'عميل نقدي'),
-            '💰 ' + window.formatMoney(invoice.total) + ' ج.م',
-            '',
-            '📦 الأصناف:'
-        ];
+    // نص مختصر جداً (يدعم حتى 2900 حرف)
+    const company = window.companyData || { name: 'الميزان', phone: '' };
+    
+    // 🎯 نص مختصر - يعرض فقط الأساسيات
+    const lines = [
+        company.name || 'الميزان',
+        'INV#' + invoice.number,
+        'Date: ' + invoice.date,
+        'Customer: ' + (invoice.customer || 'Cash'),
+        'TOTAL: ' + window.formatMoney(invoice.total) + ' EGP',
+        'Items: ' + (invoice.items || []).length
+    ];
 
-        (invoice.items || []).slice(0, 5).forEach(function(item, i) {
-            lines.push('  ' + (i+1) + '. ' + item.name + ' × ' + item.qty + ' = ' + window.formatMoney(item.total));
-        });
+    // إضافة أول 3 أصناف فقط
+    (invoice.items || []).slice(0, 3).forEach(function(item, i) {
+        lines.push((i+1) + '. ' + String(item.name).substring(0, 15) + ' x' + item.qty);
+    });
 
-        if (invoice.items && invoice.items.length > 5) {
-            lines.push('  ... و ' + (invoice.items.length - 5) + ' أصناف أخرى');
-        }
+    if ((invoice.items || []).length > 3) {
+        lines.push('+' + ((invoice.items || []).length - 3) + ' more items');
+    }
 
-        lines.push('');
-        lines.push('💵 الدفع: ' + window.getPaymentMethodLabel(invoice.paymentMethod));
-        lines.push('📱 تواصل: ' + (window.companyData ? window.companyData.phone : ''));
+    lines.push('---');
+    if (company.phone) lines.push('Tel: ' + company.phone);
+    lines.push('ID: ' + String(invoice.id).slice(-8));
 
-        return lines.join('\n');
-    };
-
+    return lines.join('\n');
+};
     // ═══════════════════════════════════════════════════════════
     // 🎨 عرض QR Code
     // ═══════════════════════════════════════════════════════════
@@ -93,13 +95,13 @@
             setTimeout(function() {
                 const container = document.getElementById('qrContainer');
                 if (container && typeof QRCode !== 'undefined') {
-                    new QRCode(container, {
-                        text: qrText,
-                        width: 240,
-                        height: 240,
-                        colorDark: '#0D0D0D',
-                        colorLight: '#FFFFFF',
-                        correctLevel: QRCode.CorrectLevel.M
+                   new QRCode(container, {
+    text: qrText,
+    width: 200,
+    height: 200,
+    colorDark: '#0D0D0D',
+    colorLight: '#FFFFFF',
+    correctLevel: QRCode.CorrectLevel.L  // ← مستوى تصحيح أقل = حجم أصغر
                     });
                     console.log('✅ تم توليد QR Code');
                 }
