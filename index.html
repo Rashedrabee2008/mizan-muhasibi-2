@@ -966,47 +966,32 @@
     <div id="toast" class="toast"></div>
 
 <!-- Firebase SDK -->
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="...firebase-app-compat.js"></script>
+<script src="...firebase-database-compat.js"></script>
+<script src="...firebase-auth-compat.js"></script>
 
 <!-- الأمان -->
-<script src="crypto.js"></script>
-<script src="session.js"></script>
-<script src="2fa.js"></script>
+<script src="crypto.js"></script>       ✅
+<script src="session.js"></script>      ✅
+<script src="2fa.js"></script>          ✅
 
 <!-- التطبيق -->
-<script src="app.js"></script>
-<script src="app-extras.js"></script>
-<script src="accounts.js"></script>
-<script src="notifications.js"></script>
-<script src="security.js"></script>
-<script src="language.js"></script>
-    
+<script src="app.js"></script>          ✅
+<script src="app-extras.js"></script>   ✅
+<script src="accounts.js"></script>     ✅
+<script src="notifications.js"></script>✅
+<script src="security.js"></script>     ✅
+<script src="language.js"></script>     ✅
+
 <!-- تفعيل الأمان عند التحميل -->
 <script>
     window.addEventListener('load', async function() {
-        // تأخير حتى تحميل كل الملفات
         await new Promise(r => setTimeout(r, 3000));
-        
-        // ترقية كلمات المرور عند أول تشغيل
         if (typeof upgradeUserPasswords === 'function') {
             setTimeout(upgradeUserPasswords, 2000);
         }
-        
         console.log('🔒 نظام الأمان المتقدم جاهز');
     });
-</script>
-
-<!-- Service Worker -->
-<script>
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('./sw.js')
-                .then(reg => console.log('✅ SW مسجل:', reg.scope))
-                .catch(err => console.warn('⚠️ SW فشل:', err.message));
-        });
-    }
 </script>
     
 </body>
