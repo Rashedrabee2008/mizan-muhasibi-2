@@ -1024,6 +1024,18 @@
         });
     }
 </script>
+
+    // في index.html، بعد device-lock.js، أضف:
+<script>
+    window.addEventListener('load', function() {
+        setTimeout(function() {
+            if (typeof initDeviceLock === 'function' && !window.__deviceId) {
+                initDeviceLock();
+            }
+        }, 2000);
+    });
+</script>
+    
     
 </body>
 </html>
