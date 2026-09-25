@@ -1,5 +1,5 @@
 // ============================================================
-// qrcode.js - توليد QR Code للفواتير
+// qrcode.js - توليد QR Code للفواتير (نسخة محسّنة)
 // ============================================================
 
 (function() {
@@ -8,59 +8,62 @@
     console.log('📱 تحميل qrcode.js');
 
     // ═══════════════════════════════════════════════════════════
-    // 📱 مكتبة QR Code (CDN)
+    // 📚 مكتبة QR Code (qrcode-generator - أحدث)
     // ═══════════════════════════════════════════════════════════
     function loadQRCodeLibrary() {
         return new Promise(function(resolve, reject) {
-            if (typeof QRCode !== 'undefined') {
+            if (typeof qrcode !== 'undefined') {
                 resolve();
                 return;
             }
             const script = document.createElement('script');
-            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
-            script.onload = resolve;
-            script.onerror = reject;
+            script.src = 'https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js';
+            script.onload = function() {
+                console.log('✅ تم تحميل qrcode-generator');
+                resolve();
+            };
+            script.onerror = function() {
+                console.error('❌ فشل تحميل qrcode-generator');
+                reject();
+            };
             document.head.appendChild(script);
         });
     }
 
-  // ═══════════════════════════════════════════════════════════
-// 📋 إنشاء نص الفاتورة - نسخة مختصرة
-// ═══════════════════════════════════════════════════════════
-window.generateInvoiceQRText = function(invoice) {
-    const company = window.companyData || { name: 'الميزان', phone: '' };
-    
-    // نص مختصر لتجنب code length overflow
-    const lines = [
-        company.name || 'Mizan',
-        'INV#' + invoice.number,
-        'Date: ' + invoice.date,
-        'Customer: ' + (invoice.customer || 'Cash'),
-        'TOTAL: ' + window.formatMoney(invoice.total) + ' EGP',
-        'Items: ' + (invoice.items || []).length
-    ];
+    // ═══════════════════════════════════════════════════════════
+    // 📋 إنشاء نص QR مختصر
+    // ═══════════════════════════════════════════════════════════
+    window.generateInvoiceQRText = function(invoice) {
+        const company = window.companyData || { name: 'الميزان' };
+        
+        const lines = [
+            company.name || 'Mizan',
+            'INV#' + invoice.number,
+            'Date: ' + invoice.date,
+            'Customer: ' + (invoice.customer || 'Cash'),
+            'TOTAL: ' + window.formatMoney(invoice.total) + ' EGP'
+        ];
 
-    (invoice.items || []).slice(0, 3).forEach(function(item, i) {
-        lines.push((i+1) + '.' + String(item.name).substring(0, 12) + ' x' + item.qty);
-    });
+        lines.push('Items: ' + (invoice.items || []).length);
+        lines.push('---');
 
-    if ((invoice.items || []).length > 3) {
-        lines.push('+' + ((invoice.items || []).length - 3) + ' more');
-    }
+        (invoice.items || []).slice(0, 2).forEach(function(item, i) {
+            lines.push((i+1) + '.' + String(item.name).substring(0, 10) + ' x' + item.qty);
+        });
 
-    lines.push('---');
-    if (company.phone) lines.push('Tel: ' + company.phone);
-    lines.push('ID:' + String(invoice.id).slice(-8));
+        if (company.phone) lines.push('Tel: ' + company.phone);
+        lines.push('ID: ' + String(invoice.id).slice(-6));
 
-    return lines.join('\n');
-};
+        return lines.join('\n');
+    };
+
     // ═══════════════════════════════════════════════════════════
     // 🎨 عرض QR Code
     // ═══════════════════════════════════════════════════════════
     window.showInvoiceQR = async function(invoiceId) {
         try {
             await loadQRCodeLibrary();
-            
+
             const invoice = (window.sales || []).find(function(s) { return s.id == invoiceId; });
             if (!invoice) {
                 if (typeof showToast === 'function') showToast('⚠️ الفاتورة غير موجودة', 'error');
@@ -68,18 +71,41 @@ window.generateInvoiceQRText = function(invoice) {
             }
 
             const qrText = generateInvoiceQRText(invoice);
-            
-            // حذف القديم
-            const oldQR = document.getElementById('qrContainer');
-            if (oldQR) oldQR.remove();
+            console.log('📱 نص QR:', qrText);
+            console.log('📏 الطول:', qrText.length);
 
+            // ═══ إنشاء QR باستخدام qrcode-generator ═══
+            let qr;
+            try {
+                // نوع 0 = اختيار تلقائي
+                qr = qrcode(0, 'L');
+                qr.addData(qrText);
+                qr.make();
+                console.log('✅ تم توليد QR بنجاح');
+            } catch (e) {
+                console.error('❌ فشل توليد QR:', e);
+                if (typeof showToast === 'function') showToast('❌ فشل توليد QR', 'error');
+                return;
+            }
+
+            // تحويل إلى SVG
+            const qrSvg = qr.createSvgTag({
+                cellSize: 6,
+                margin: 4,
+                scalable: true
+            });
+
+            // ═══ إنشاء HTML ═══
             const html = '<button class="modal-close" onclick="closeModal()">&times;</button>' +
                 '<h3>📱 QR Code - فاتورة #' + invoice.number + '</h3>' +
                 '<div style="background:#fff;padding:20px;border-radius:12px;text-align:center;">' +
-                    '<div id="qrContainer" style="display:inline-block;padding:10px;background:#fff;border-radius:8px;"></div>' +
-                    '<div style="margin-top:15px;color:#0D0D0D;font-size:12px;font-weight:800;">' +
-                        'امسح الكود للاطلاع على الفاتورة' +
+                    '<div id="qrContainer" style="display:inline-block;padding:10px;background:#fff;border-radius:8px;">' +
+                        qrSvg +
                     '</div>' +
+                    '<div style="margin-top:15px;color:#0D0D0D;font-size:12px;font-weight:800;">' +
+                        '📱 امسح الكود للاطلاع على الفاتورة' +
+                    '</div>' +
+                    '<div style="margin-top:10px;padding:10px;background:#f5f5f5;border-radius:8px;color:#333;font-size:11px;text-align:right;white-space:pre-line;max-height:150px;overflow-y:auto;direction:ltr;font-family:monospace;">' + qrText + '</div>' +
                 '</div>' +
                 '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:12px;">' +
                     '<button class="btn btn-primary" onclick="downloadInvoiceQR(' + invoice.id + ')"><i class="fas fa-download"></i> تحميل</button>' +
@@ -89,22 +115,6 @@ window.generateInvoiceQRText = function(invoice) {
 
             if (typeof openModal === 'function') openModal(html);
 
-            // توليد QR بعد ظهور النافذة
-            setTimeout(function() {
-                const container = document.getElementById('qrContainer');
-                if (container && typeof QRCode !== 'undefined') {
-                  new QRCode(container, {
-    text: qrText,
-    width: 220,
-    height: 220,
-    colorDark: '#0D0D0D',
-    colorLight: '#FFFFFF',
-    correctLevel: QRCode.CorrectLevel.L  // ← مستوى أصغر = يدعم نص أقل حجم
-});
-                    console.log('✅ تم توليد QR Code');
-                }
-            }, 300);
-
         } catch (e) {
             console.error('❌ خطأ QR:', e);
             if (typeof showToast === 'function') showToast('❌ فشل توليد QR', 'error');
@@ -112,28 +122,44 @@ window.generateInvoiceQRText = function(invoice) {
     };
 
     // ═══════════════════════════════════════════════════════════
-    // 💾 تحميل QR كصورة
+    // 💾 تحميل QR كصورة PNG
     // ═══════════════════════════════════════════════════════════
     window.downloadInvoiceQR = function(invoiceId) {
         const container = document.getElementById('qrContainer');
         if (!container) return;
 
-        const canvas = container.querySelector('canvas');
-        const img = container.querySelector('img');
+        const svg = container.querySelector('svg');
+        if (!svg) {
+            if (typeof showToast === 'function') showToast('⚠️ لا يوجد QR', 'warning');
+            return;
+        }
 
-        if (canvas) {
+        // تحويل SVG إلى PNG
+        const svgData = new XMLSerializer().serializeToString(svg);
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const img = new Image();
+
+        const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+        const url = URL.createObjectURL(svgBlob);
+
+        img.onload = function() {
+            canvas.width = 400;
+            canvas.height = 400;
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
             const link = document.createElement('a');
             link.download = 'invoice-qr-' + invoiceId + '.png';
             link.href = canvas.toDataURL('image/png');
             link.click();
-        } else if (img) {
-            const link = document.createElement('a');
-            link.download = 'invoice-qr-' + invoiceId + '.png';
-            link.href = img.src;
-            link.click();
-        }
 
-        if (typeof showToast === 'function') showToast('✅ تم التحميل', 'success');
+            URL.revokeObjectURL(url);
+            if (typeof showToast === 'function') showToast('✅ تم التحميل', 'success');
+        };
+
+        img.src = url;
     };
 
     // ═══════════════════════════════════════════════════════════
@@ -153,10 +179,9 @@ window.generateInvoiceQRText = function(invoice) {
                 });
             } catch (e) {}
         } else {
-            // نسخ إلى الحافظة
             try {
                 await navigator.clipboard.writeText(text);
-                if (typeof showToast === 'function') showToast('✅ تم نسخ تفاصيل الفاتورة', 'success');
+                if (typeof showToast === 'function') showToast('✅ تم نسخ التفاصيل', 'success');
             } catch (e) {
                 alert(text);
             }
@@ -170,55 +195,55 @@ window.generateInvoiceQRText = function(invoice) {
         const container = document.getElementById('qrContainer');
         if (!container) return;
 
-        const canvas = container.querySelector('canvas');
-        const img = container.querySelector('img');
-        const qrImage = canvas ? canvas.toDataURL() : (img ? img.src : '');
+        const svg = container.querySelector('svg');
+        if (!svg) {
+            if (typeof showToast === 'function') showToast('⚠️ لا يوجد QR', 'warning');
+            return;
+        }
 
+        const svgData = new XMLSerializer().serializeToString(svg);
         const invoice = (window.sales || []).find(function(s) { return s.id == invoiceId; });
         const companyName = window.companyData ? window.companyData.name : 'الميزان';
 
-        const printWindow = window.open('', '_blank');
-        printWindow.document.write(`
+        const printContent = `
             <!DOCTYPE html>
-            <html dir="rtl">
+            <html dir="rtl" lang="ar">
             <head>
+                <meta charset="UTF-8">
                 <title>QR - فاتورة #${invoice.number}</title>
                 <style>
                     body { font-family: Arial, sans-serif; text-align: center; padding: 40px; }
-                    h1 { color: #C9A94E; margin-bottom: 20px; }
-                    img { max-width: 300px; margin: 20px 0; }
-                    .info { background: #f5f5f5; padding: 20px; border-radius: 8px; margin-top: 20px; }
-                    .info div { padding: 5px 0; }
+                    h1 { color: #C9A94E; margin-bottom: 20px; font-size: 28px; }
+                    svg { max-width: 300px; height: auto; margin: 20px 0; }
+                    .info { background: #f5f5f5; padding: 20px; border-radius: 8px; margin-top: 20px; text-align: right; }
+                    .info div { padding: 6px 0; font-size: 14px; }
                 </style>
             </head>
             <body>
                 <h1>⚖️ ${companyName}</h1>
                 <h2>فاتورة #${invoice.number}</h2>
-                <img src="${qrImage}" alt="QR Code" />
+                ${svgData}
                 <div class="info">
                     <div><strong>التاريخ:</strong> ${invoice.date}</div>
                     <div><strong>العميل:</strong> ${invoice.customer || 'عميل نقدي'}</div>
                     <div><strong>الإجمالي:</strong> ${window.formatMoney(invoice.total)} ج.م</div>
                 </div>
-                <p style="margin-top:20px;color:#666;">امسح الكود للاطلاع على تفاصيل الفاتورة</p>
-                <script>window.print();</script>
+                <p style="margin-top:20px;color:#666;font-size:12px;">امسح الكود للاطلاع على تفاصيل الفاتورة</p>
+                <script>window.onload=function(){setTimeout(function(){window.print();},500);};<\/script>
             </body>
             </html>
-        `);
-        printWindow.document.close();
+        `;
+
+        const w = window.open('', '_blank');
+        if (w) {
+            w.document.write(printContent);
+            w.document.close();
+        }
     };
 
     // ═══════════════════════════════════════════════════════════
-    // 🔗 إضافة زر QR في قائمة الفواتير
+    // 🚀 تحميل المكتبة مسبقاً
     // ═══════════════════════════════════════════════════════════
-    function addQRButtonToInvoices() {
-        // سيتم استدعاؤها بعد تحميل الفواتير
-        setTimeout(function() {
-            // يمكن استخدامها عند عرض الفواتير
-        }, 3000);
-    }
-
-    // تحميل المكتبة مسبقاً
     setTimeout(loadQRCodeLibrary, 3000);
 
     console.log('✅ qrcode.js جاهز');
