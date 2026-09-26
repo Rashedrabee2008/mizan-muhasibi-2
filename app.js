@@ -1,8 +1,8 @@
 // ============================================================
-// الميزان 15.0.0 - app.js (النسخة النهائية الكاملة)
+// الميزان 15.0.0 - app.js (النسخة الكاملة مع القيود المحاسبية)
 // ============================================================
 
-console.log('🚀 تحميل app.js v15.0.0');
+console.log('🚀 تحميل app.js v15.0.0 مع القيود التلقائية');
 
 // ═══════════════════════════════════════════════════════════
 // ☁️ Firebase Configuration
@@ -161,18 +161,55 @@ window.updateClock = function() {
     if (invTimeEl) invTimeEl.value = hoursStr + ':' + minutes + ' ' + ampm;
 };
 
-// دالة استدعاء آمنة
 window.callIfExists = function(fnName, arg1, arg2) {
     if (typeof window[fnName] === 'function') {
-        if (arg2 !== undefined) {
-            window[fnName](arg1, arg2);
-        } else if (arg1 !== undefined) {
-            window[fnName](arg1);
-        } else {
-            window[fnName]();
-        }
+        if (arg2 !== undefined) window[fnName](arg1, arg2);
+        else if (arg1 !== undefined) window[fnName](arg1);
+        else window[fnName]();
     } else {
         if (typeof showToast === 'function') showToast('⚠️ الميزة غير متاحة', 'warning');
+    }
+};
+
+// ═══════════════════════════════════════════════════════════
+// 📚 دالة إنشاء قيد محاسبي (مركزية)
+// ═══════════════════════════════════════════════════════════
+window.createJournalEntry = function(date, description, lines, reference) {
+    try {
+        if (!window.journalEntries) window.journalEntries = [];
+        
+        // التحقق من التوازن
+        let totalDebit = 0, totalCredit = 0;
+        lines.forEach(function(line) {
+            totalDebit += parseFloat(line.debit) || 0;
+            totalCredit += parseFloat(line.credit) || 0;
+        });
+        
+        if (Math.abs(totalDebit - totalCredit) > 0.01) {
+            console.warn('⚠️ القيد غير متوازن:', totalDebit, '≠', totalCredit);
+            return null;
+        }
+        
+        const entry = {
+            id: Date.now() + Math.random(),
+            number: window.journalEntries.length + 1,
+            date: date || window.getTodayDate(),
+            description: description,
+            lines: lines,
+            reference: reference || '',
+            totalDebit: totalDebit,
+            totalCredit: totalCredit,
+            createdAt: new Date().toISOString(),
+            createdBy: window.currentUser ? window.currentUser.name : 'system'
+        };
+        
+        window.journalEntries.push(entry);
+        window.setData('journalEntries', window.journalEntries);
+        console.log('✅ قيد محاسبي #' + entry.number + ':', description);
+        return entry;
+    } catch (e) {
+        console.error('❌ فشل القيد:', e);
+        return null;
     }
 };
 
@@ -1141,6 +1178,61 @@ window.saveSale = function() {
     setData('products', products);
     setData('treasury', treasury);
 
+    // ═══════════════════════════════════════════════════════════
+    // 📚 القيد المحاسبي التلقائي للفاتورة
+    // ═══════════════════════════════════════════════════════════
+    try {
+        if (typeof window.getAccountByCode === 'function' && typeof window.createJournalEntry === 'function') {
+            const salesAccount = window.getAccountByCode('4100');
+            const cashAccount = window.getAccountByCode('1110');
+            const customerAccount = window.getAccountByCode('1200');
+            const cogsAccount = window.getAccountByCode('5100');
+            const inventoryAccount = window.getAccountByCode('1300');
+
+            if (salesAccount) {
+                // قيد الإيراد
+                if (isCash && cashAccount) {
+                    window.createJournalEntry(
+                        today,
+                        'فاتورة بيع نقدية #' + inv.number + ' - ' + customer,
+                        [
+                            { accountId: cashAccount.id, debit: total, credit: 0 },
+                            { accountId: salesAccount.id, debit: 0, credit: total }
+                        ],
+                        'INV-' + inv.number
+                    );
+                } else if (customerAccount) {
+                    window.createJournalEntry(
+                        today,
+                        'فاتورة بيع آجل #' + inv.number + ' - ' + customer,
+                        [
+                            { accountId: customerAccount.id, debit: total, credit: 0 },
+                            { accountId: salesAccount.id, debit: 0, credit: total }
+                        ],
+                        'INV-' + inv.number
+                    );
+                }
+
+                // قيد تكلفة المبيعات
+                if (cogsTotal > 0 && cogsAccount && inventoryAccount) {
+                    window.createJournalEntry(
+                        today,
+                        'تكلفة مبيعات فاتورة #' + inv.number,
+                        [
+                            { accountId: cogsAccount.id, debit: cogsTotal, credit: 0 },
+                            { accountId: inventoryAccount.id, debit: 0, credit: cogsTotal }
+                        ],
+                        'INV-' + inv.number + '-COGS'
+                    );
+                }
+
+                console.log('✅ قيود الفاتورة #' + inv.number + ' تم إنشاؤها');
+            }
+        }
+    } catch (e) {
+        console.error('⚠️ فشل القيد التلقائي:', e);
+    }
+
     currentSaleItems = [];
     if ($('saleCustomer')) $('saleCustomer').value = '';
     if ($('saleDiscount')) $('saleDiscount').value = '0';
@@ -1327,6 +1419,41 @@ window.savePurchase = function() {
     setData('products', products);
     setData('treasury', treasury);
 
+    // ═══ 📚 قيد الشراء ═══
+    try {
+        if (typeof window.getAccountByCode === 'function' && typeof window.createJournalEntry === 'function') {
+            const inventoryAccount = window.getAccountByCode('1300');
+            const cashAccount = window.getAccountByCode('1110');
+            const supplierAccount = window.getAccountByCode('2110');
+
+            if (inventoryAccount) {
+                if (isCash && cashAccount) {
+                    window.createJournalEntry(
+                        today,
+                        'فاتورة شراء نقدية #' + inv.number + ' - ' + supplierName,
+                        [
+                            { accountId: inventoryAccount.id, debit: subtotal, credit: 0 },
+                            { accountId: cashAccount.id, debit: 0, credit: subtotal }
+                        ],
+                        'PUR-' + inv.number
+                    );
+                } else if (supplierAccount) {
+                    window.createJournalEntry(
+                        today,
+                        'فاتورة شراء آجل #' + inv.number + ' - ' + supplierName,
+                        [
+                            { accountId: inventoryAccount.id, debit: subtotal, credit: 0 },
+                            { accountId: supplierAccount.id, debit: 0, credit: subtotal }
+                        ],
+                        'PUR-' + inv.number
+                    );
+                }
+            }
+        }
+    } catch (e) {
+        console.error('⚠️ فشل قيد الشراء:', e);
+    }
+
     currentPurItems = [];
     if ($('purSupplier')) $('purSupplier').value = '';
     if ($('purNotes')) $('purNotes').value = '';
@@ -1446,6 +1573,27 @@ window.saveExpense = function() {
 
     setData('expenses', expenses);
     setData('treasury', treasury);
+
+    // ═══ 📚 قيد المصروف ═══
+    try {
+        if (typeof window.getAccountByCode === 'function' && typeof window.createJournalEntry === 'function') {
+            const cashAccount = window.getAccountByCode('1110');
+            const expenseAccount = window.getAccountByCode('5800');
+
+            if (cashAccount && expenseAccount) {
+                window.createJournalEntry(
+                    date,
+                    'مصروف: ' + note + ' (' + category + ')',
+                    [
+                        { accountId: expenseAccount.id, debit: amount, credit: 0 },
+                        { accountId: cashAccount.id, debit: 0, credit: amount }
+                    ],
+                    'EXP-' + exp.id
+                );
+            }
+        }
+    } catch (e) {}
+
     if ($('expNote')) $('expNote').value = '';
     if ($('expAmount')) $('expAmount').value = '';
 
@@ -1731,15 +1879,12 @@ window.printInvoice = function(id) {
         '.footer{text-align:center;margin-top:20px;padding-top:15px;border-top:2px dashed #ddd;font-size:12px;color:#666;}' +
         '</style></head><body>' +
         '<div class="header"><h1>' + (company.name || 'الميزان') + '</h1>' +
-        (company.phone ? '<p>📞 ' + company.phone + '</p>' : '') +
-        (company.address ? '<p>📍 ' + company.address + '</p>' : '') + '</div>' +
+        (company.phone ? '<p>📞 ' + company.phone + '</p>' : '') + '</div>' +
         '<div class="info-box"><div><strong>رقم الفاتورة:</strong> #' + inv.number + '<br>' +
         '<strong>التاريخ:</strong> ' + inv.date + '<br><strong>الوقت:</strong> ' + (inv.time || '') + '</div>' +
         '<div><strong>العميل:</strong> ' + (inv.customer || 'عميل نقدي') + '<br>' +
-        '<strong>البائع:</strong> ' + (inv.seller || '-') + '<br>' +
-        '<strong>طريقة الدفع:</strong> ' + getPaymentMethodLabel(inv.paymentMethod) + '</div></div>' +
-        '<table><thead><tr><th style="width:50px;">#</th><th>الصنف</th><th style="width:80px;">الكمية</th>' +
-        '<th style="width:100px;">السعر</th><th style="width:110px;">الإجمالي</th></tr></thead><tbody>' + itemsRows + '</tbody></table>' +
+        '<strong>البائع:</strong> ' + (inv.seller || '-') + '</div></div>' +
+        '<table><thead><tr><th>#</th><th>الصنف</th><th>الكمية</th><th>السعر</th><th>الإجمالي</th></tr></thead><tbody>' + itemsRows + '</tbody></table>' +
         '<div class="totals"><div><span>المجموع:</span><span>' + formatMoney(inv.subtotal || inv.total) + ' ج.م</span></div>' +
         (inv.vat > 0 ? '<div><span>الضريبة:</span><span>' + formatMoney(inv.vat) + ' ج.م</span></div>' : '') +
         (inv.discount > 0 ? '<div><span>الخصم:</span><span>- ' + formatMoney(inv.discount) + ' ج.م</span></div>' : '') +
@@ -1810,11 +1955,8 @@ window.printReceipt = function(id) {
 };
 
 window.showQRCode = function(invoiceId) {
-    if (typeof window.showInvoiceQR === 'function') {
-        window.showInvoiceQR(invoiceId);
-    } else {
-        showToast('⚠️ ميزة QR غير متاحة', 'warning');
-    }
+    if (typeof window.showInvoiceQR === 'function') window.showInvoiceQR(invoiceId);
+    else showToast('⚠️ ميزة QR غير متاحة', 'warning');
 };
 
 window.deleteInvoice = function(id) {
@@ -1830,10 +1972,12 @@ window.deleteInvoice = function(id) {
 
     window.treasury = treasury.filter(function(t) { return !(t.refType === 'sale' && t.refId === id); });
     window.sales = sales.filter(function(s) { return s.id !== id; });
+    window.journalEntries = journalEntries.filter(function(e) { return e.reference !== 'INV-' + inv.number; });
 
     setData('sales', sales);
     setData('products', products);
     setData('treasury', treasury);
+    setData('journalEntries', journalEntries);
 
     renderInvoices();
     updateInvoiceStats();
@@ -1988,6 +2132,25 @@ window.saveCollect = function() {
     setData('treasury', treasury);
     setData('sales', sales);
 
+    // ═══ 📚 قيد التحصيل ═══
+    try {
+        if (typeof window.getAccountByCode === 'function' && typeof window.createJournalEntry === 'function') {
+            const cashAccount = window.getAccountByCode('1110');
+            const customerAccount = window.getAccountByCode('1200');
+            if (cashAccount && customerAccount) {
+                window.createJournalEntry(
+                    date,
+                    'تحصيل من ' + party,
+                    [
+                        { accountId: cashAccount.id, debit: amount, credit: 0 },
+                        { accountId: customerAccount.id, debit: 0, credit: amount }
+                    ],
+                    'COL-' + pay.id
+                );
+            }
+        }
+    } catch (e) {}
+
     if ($('collectAmount')) $('collectAmount').value = '';
     if ($('collectNote')) $('collectNote').value = '';
     if ($('collectCustomer')) $('collectCustomer').value = '';
@@ -2044,6 +2207,25 @@ window.savePay = function() {
     setData('payments', payments);
     setData('treasury', treasury);
     setData('purchases', purchases);
+
+    // ═══ 📚 قيد السداد ═══
+    try {
+        if (typeof window.getAccountByCode === 'function' && typeof window.createJournalEntry === 'function') {
+            const supplierAccount = window.getAccountByCode('2110');
+            const cashAccount = window.getAccountByCode('1110');
+            if (supplierAccount && cashAccount) {
+                window.createJournalEntry(
+                    date,
+                    'سداد لـ ' + party,
+                    [
+                        { accountId: supplierAccount.id, debit: amount, credit: 0 },
+                        { accountId: cashAccount.id, debit: 0, credit: amount }
+                    ],
+                    'PAY-' + pay.id
+                );
+            }
+        }
+    } catch (e) {}
 
     if ($('payAmount')) $('payAmount').value = '';
     if ($('payNote')) $('payNote').value = '';
@@ -2918,7 +3100,7 @@ window.applyPermissions = function() {
 };
 
 // ═══════════════════════════════════════════════════════════
-// 🚀 التهيئة
+// 🚀 التهيئة النهائية
 // ═══════════════════════════════════════════════════════════
 window.refreshAllUI = function() {
     renderProducts();
@@ -3038,12 +3220,10 @@ window.init = function() {
     }, 30000);
 
     console.log('✅ التطبيق جاهز!');
-    console.log('👥 المستخدمون:', users.length);
-    console.log('🔐 المدير / 123456');
 };
 
 document.addEventListener('DOMContentLoaded', function() {
     init();
     setInterval(updateClock, 1000);
-    console.log('✅ app.js v15.0.0 كامل');
+    console.log('✅ app.js v15.0.0 كامل مع القيود التلقائية');
 });
